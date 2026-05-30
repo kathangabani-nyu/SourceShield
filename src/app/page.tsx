@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { IntegrationStatusChips } from "@/components/integration-status-chips";
 
 export default function HomePage() {
   return (
@@ -11,6 +12,15 @@ export default function HomePage() {
         <p className="mt-4 text-lg text-slate-300">
           Live pseudonymous follow-up for newsroom tips — with privacy limits made explicit.
         </p>
+
+        <section className="mt-8">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-slate-500">
+            Live integration status
+          </h2>
+          <div className="mt-3">
+            <IntegrationStatusChips />
+          </div>
+        </section>
 
         <div className="mt-10 flex flex-wrap gap-4">
           <Link
@@ -40,6 +50,14 @@ export default function HomePage() {
             <li>Journalist sends an unsafe follow-up → app rewrites it → lands on phone</li>
             <li>Source replies → two-way loop closes on stage</li>
           </ol>
+          <p className="mt-4 text-sm text-slate-400">
+            <strong className="text-slate-300">No Linq keys?</strong> Use{" "}
+            <Link href="/intake" className="text-sky-400 hover:underline">
+              /intake
+            </Link>{" "}
+            plus dashboard <strong className="text-slate-300">Preview rewrite (dry-run)</strong> —
+            intentional, not broken.
+          </p>
         </section>
 
         <section className="mt-12 rounded-lg border border-amber-900/40 bg-amber-950/20 p-6">
@@ -64,25 +82,6 @@ export default function HomePage() {
               Passkey return applies to the web fallback path only — iMessage sources return via
               the same Linq thread.
             </li>
-          </ul>
-        </section>
-
-        <section className="mt-12">
-          <h2 className="text-lg font-semibold">Krava primitives in use</h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-            {[
-              "Private inference (TEE-routed LLM intake)",
-              "Encrypted memory (raw transcripts)",
-              "Platform user provisioning (per-source scope)",
-              "Passkey return (web fallback)",
-            ].map((item) => (
-              <li
-                key={item}
-                className="rounded-md border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-slate-300"
-              >
-                {item}
-              </li>
-            ))}
           </ul>
         </section>
       </main>

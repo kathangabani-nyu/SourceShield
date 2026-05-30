@@ -16,18 +16,21 @@ export function getAppUrl(): string {
   return "http://localhost:3000";
 }
 
-export function triggerWorker(payload: WorkerPayload): void {
+/** Awaitable worker trigger — use with waitUntil() on Vercel so the fetch completes. */
+export async function triggerWorker(payload: WorkerPayload): Promise<void> {
   const secret = process.env.INTERNAL_WORKER_SECRET;
   const url = `${getAppUrl()}/api/linq/process`;
 
-  void fetch(url, {
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
     },
     body: JSON.stringify({ payload }),
-  }).catch(() => {
-    // Never log webhook payload or processing details
   });
+
+  if (!res.ok) {
+    throw new Error(`worker_trigger_${res.status}`);
+  }
 }

@@ -1,6 +1,18 @@
 import { compareClaimsWithLlm } from "./krava/intake-llm";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase/server";
 
+async function countDistinctChannelsInGroup(
+  groupId: string
+): Promise<number> {
+  const supabase = getSupabaseAdmin();
+  const { data: grouped } = await supabase
+    .from("tips")
+    .select("source_channel_id")
+    .eq("claim_group_id", groupId);
+
+  return new Set(grouped?.map((t) => t.source_channel_id) ?? []).size || 1;
+}
+
 export async function assignClaimGroup(
   tipId: string,
   claimFingerprint: string,
@@ -23,12 +35,7 @@ export async function assignClaimGroup(
       .update({ claim_group_id: groupId, updated_at: new Date().toISOString() })
       .in("id", [...matches.map((m) => m.id), tipId]);
 
-    const { count } = await supabase
-      .from("tips")
-      .select("source_channel_id", { count: "exact", head: true })
-      .eq("claim_group_id", groupId);
-
-    return count ?? 1;
+    return countDistinctChannelsInGroup(groupId);
   }
 
   const { data: recentTips } = await supabase
@@ -50,15 +57,7 @@ export async function assignClaimGroup(
         .update({ claim_group_id: groupId, updated_at: new Date().toISOString() })
         .in("id", [other.id, tipId]);
 
-      const { data: grouped } = await supabase
-        .from("tips")
-        .select("source_channel_id")
-        .eq("claim_group_id", groupId);
-
-      const distinctChannels = new Set(
-        grouped?.map((t) => t.source_channel_id) ?? []
-      );
-      return distinctChannels.size;
+      return countDistinctChannelsInGroup(groupId);
     }
   }
 
@@ -79,10 +78,5 @@ export async function countDistinctChannelsForTip(
 
   if (!tip?.claim_group_id) return 1;
 
-  const { data: grouped } = await supabase
-    .from("tips")
-    .select("source_channel_id")
-    .eq("claim_group_id", tip.claim_group_id);
-
-  return new Set(grouped?.map((t) => t.source_channel_id) ?? []).size;
+  return countDistinctChannelsInGroup(tip.claim_group_id);
 }

@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processInboundEvent } from "@/lib/process-inbound";
 import type { WorkerPayload } from "@/lib/app-url";
+import { requireWorkerAuth } from "@/lib/server-auth";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-function authorize(request: NextRequest): boolean {
-  const secret = process.env.INTERNAL_WORKER_SECRET;
-  if (!secret) return true;
-  const auth = request.headers.get("authorization");
-  return auth === `Bearer ${secret}`;
-}
-
 export async function POST(request: NextRequest) {
-  if (!authorize(request)) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const authError = requireWorkerAuth(request);
+  if (authError) return authError;
 
   let body: { payload?: WorkerPayload };
   try {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requirePrivilegedAuth } from "@/lib/server-auth";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server";
 import { hashHandle } from "@/lib/source-channel";
 
@@ -6,16 +7,10 @@ export const runtime = "nodejs";
 
 /**
  * Seeds two demo tips with overlapping claim fingerprints for corroboration demo.
- * Protect with INTERNAL_WORKER_SECRET in production.
  */
 export async function POST(request: NextRequest) {
-  const secret = process.env.INTERNAL_WORKER_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    }
-  }
+  const authError = requirePrivilegedAuth(request);
+  if (authError) return authError;
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: "not_configured" }, { status: 503 });
@@ -26,8 +21,16 @@ export async function POST(request: NextRequest) {
   const fingerprint = "city-hall-contract-anomaly";
 
   const channels = [
-    { hash: hashHandle("seed:channel-a"), summary: "A source reports irregular contract approvals at a municipal building." },
-    { hash: hashHandle("seed:channel-b"), summary: "Another channel describes similar contract irregularities at city hall." },
+    {
+      hash: hashHandle("seed:channel-a"),
+      summary:
+        "A source reports irregular contract approvals at a municipal building.",
+    },
+    {
+      hash: hashHandle("seed:channel-b"),
+      summary:
+        "Another channel describes similar contract irregularities at city hall.",
+    },
   ];
 
   const tipIds: string[] = [];

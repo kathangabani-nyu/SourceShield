@@ -8,6 +8,7 @@ import { provisionKravaUser } from "./krava/client";
 import {
   MEDIA_ONLY_REPLY,
   TEXT_ONLY_REPLY,
+  type IntakeResult,
 } from "./intake-schema";
 import { hashHandle } from "./source-channel";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase/server";
@@ -38,6 +39,7 @@ export async function processInboundEvent(
   let sanitizedSummary = "Non-text inbound message";
   let duressSignal: "low" | "medium" | "high" = "low";
   let claimFingerprint = "non-text";
+  let intakeResult: IntakeResult | null = null;
 
   if (extracted.kind === "media_only") {
     replyText = MEDIA_ONLY_REPLY;
@@ -45,6 +47,7 @@ export async function processInboundEvent(
     replyText = TEXT_ONLY_REPLY;
   } else {
     const intake = await runIntakeLlm(handleHash, extracted.text);
+    intakeResult = intake;
     replyText = extracted.hasMedia
       ? `${intake.assistant_reply}\n\n${TEXT_ONLY_REPLY}`
       : intake.assistant_reply;
@@ -56,16 +59,19 @@ export async function processInboundEvent(
     const externalUserId = `source:${handleHash}`;
     try {
       const { userToken } = await provisionKravaUser(externalUserId);
-      await saveRawTranscript(
+      const mem = await saveRawTranscript(
         userToken,
         `[${new Date().toISOString()}] inbound\n${extracted.text}`
       );
+      if (mem.skipped) {
+        // Krava memory.save may no-op on non-premium keys — reply still sends
+      }
     } catch {
       // Raw transcript storage failure must not block the live reply
     }
   }
 
-  if (isSupabaseConfigured() && extracted.kind === "text") {
+  if (isSupabaseConfigured() && extracted.kind === "text" && intakeResult) {
     const supabase = getSupabaseAdmin();
 
     const { data: channel, error: channelError } = await supabase
@@ -102,6 +108,7 @@ export async function processInboundEvent(
         sanitized_summary: sanitizedSummary,
         duress_signal: duressSignal,
         claim_fingerprint: claimFingerprint,
+        next_safe_question: intakeResult.next_safe_question || null,
       })
       .select("id")
       .single();
@@ -201,6 +208,7 @@ export async function processWebIntake(
           duress_signal: intake.duress_signal,
           claim_fingerprint:
             intake.claims[0]?.fingerprint ?? `web-${handleHash.slice(0, 12)}`,
+          next_safe_question: intake.next_safe_question || null,
         })
         .select("id")
         .single();
@@ -220,7 +228,7 @@ export async function processWebIntake(
     const { userToken } = await provisionKravaUser(`source:${handleHash}`);
     await saveRawTranscript(userToken, `[web] ${text}`);
   } catch {
-    // Non-blocking
+    // Non-blocking (premium tier required for memory.save)
   }
 
   return { tipId, reply: intake.assistant_reply };

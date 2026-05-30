@@ -13,7 +13,8 @@ Created via the **Supabase Cursor plugin** (separate from PriorityTrac).
 ## Migrations applied (via plugin)
 
 1. `initial_sourceshield_schema` — `linq_events`, `source_channels`, `tips`, `outbound_messages`, Realtime on `tips`
-2. `tips_realtime_rls` — RLS: anon can **SELECT** `tips` only (sanitized fields); other tables blocked for client roles
+2. `tips_realtime_rls` — RLS on all tables (historical; anon read removed in step 3)
+3. `privacy_and_suggestions` — **drops** `anon_read_tips` (no `linq_chat_id` leak via anon key); adds `next_safe_question`. Dashboard polls `/api/tips` (service role server-side).
 
 Local SQL mirrors: [`supabase/migrations/`](../supabase/migrations/)
 
@@ -51,4 +52,4 @@ curl -X POST http://localhost:3000/api/seed \
 
 ## Security note (hackathon scope)
 
-`tips` is readable with the anon key (by design — sanitized summaries only for live Realtime dashboard). Sensitive tables (`linq_events`, `source_channels`, `outbound_messages`) deny anon access. Server routes use `service_role`.
+Migration **003** drops `anon_read_tips` so the browser anon key cannot read `linq_chat_id` or other tip columns. The dashboard loads tips via **`GET /api/tips`** (service role server-side), optionally gated by **`DASHBOARD_SECRET`** on production. Sensitive tables (`linq_events`, `source_channels`, `outbound_messages`) deny anon access.

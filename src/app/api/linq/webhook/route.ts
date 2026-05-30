@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { NextRequest, NextResponse } from "next/server";
 import type { MessageReceivedWebhookEvent } from "@linqapp/sdk/resources/webhooks";
 import { triggerWorker } from "@/lib/app-url";
@@ -32,12 +33,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  if (!isSupabaseConfigured()) {
-    triggerWorker({
-      event_id: payload.event_id,
-      event_type: payload.event_type,
-      data: payload.data,
+  const workerPayload = {
+    event_id: payload.event_id,
+    event_type: payload.event_type,
+    data: payload.data,
+  };
+
+  const enqueue = () =>
+    triggerWorker(workerPayload).catch(() => {
+      // Never log webhook payload or processing details
     });
+
+  if (!isSupabaseConfigured()) {
+    waitUntil(enqueue());
     return NextResponse.json({ ok: true, queued: true, dedupe: "skipped" });
   }
 
@@ -67,11 +75,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, dedupe: true });
   }
 
-  triggerWorker({
-    event_id: payload.event_id,
-    event_type: payload.event_type,
-    data: payload.data,
-  });
+  waitUntil(enqueue());
 
   return NextResponse.json({ ok: true, queued: true });
 }

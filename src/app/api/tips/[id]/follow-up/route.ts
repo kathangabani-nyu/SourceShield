@@ -2,13 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { safeQuestionRewrite } from "@/lib/safe-question";
 import { sendLinqTextMessage, isLinqConfigured } from "@/lib/linq/client";
+import { requireDashboardAuth } from "@/lib/server-auth";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
+const WEB_CHAT_PLACEHOLDER = "00000000-0000-0000-0000-000000000000";
+
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function POST(request: NextRequest, context: RouteContext) {
+  const authError = requireDashboardAuth(request);
+  if (authError) return authError;
+
   const { id } = await context.params;
 
   if (!isSupabaseConfigured()) {
@@ -38,22 +44,22 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "tip_not_found" }, { status: 404 });
   }
 
-  if (tip.linq_chat_id === "00000000-0000-0000-0000-000000000000") {
-    return NextResponse.json(
-      { error: "web_only_tip", message: "This tip came via the web passkey path — no iMessage chat to reply to." },
-      { status: 422 }
-    );
-  }
+  const isWebOnly = tip.linq_chat_id === WEB_CHAT_PLACEHOLDER;
+  const { original, rewritten, wasRewritten, via } =
+    await safeQuestionRewrite(message);
 
-  const { original, rewritten, wasRewritten } = safeQuestionRewrite(message);
-
-  if (!isLinqConfigured()) {
+  if (!isLinqConfigured() || isWebOnly) {
     return NextResponse.json({
       ok: true,
       dry_run: true,
+      web_only: isWebOnly,
+      message: isWebOnly
+        ? "Web intake tip — rewrite preview only (no iMessage thread)."
+        : "Linq not configured — rewrite preview only.",
       original,
       rewritten,
       wasRewritten,
+      via,
     });
   }
 
@@ -72,5 +78,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     original,
     rewritten,
     wasRewritten,
+    via,
   });
 }

@@ -2,8 +2,19 @@
 
 import { useState } from "react";
 
+const SESSION_KEY = "sourceshield_web_session";
+
+function readStoredSessionId(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(SESSION_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export default function IntakePage() {
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(readStoredSessionId);
   const [text, setText] = useState("");
   const [reply, setReply] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,6 +40,11 @@ export default function IntakePage() {
         return;
       }
       setSessionId(data.session_id);
+      try {
+        localStorage.setItem(SESSION_KEY, data.session_id);
+      } catch {
+        // Non-blocking
+      }
       setReply(data.reply);
       setText("");
     } catch {
@@ -56,9 +72,10 @@ export default function IntakePage() {
 
       <main className="mx-auto max-w-2xl p-6">
         <div className="mb-6 rounded-lg border border-slate-800 bg-slate-900 p-4 text-sm text-slate-400">
-          Use this when conference wifi or iMessage is unavailable. Your session ID is stored
-          locally so you can return pseudonymously. Raw text goes to Krava encrypted memory —
-          the dashboard shows sanitized summaries only.
+          Use this when conference wifi or iMessage is unavailable. Your session ID is stored in
+          this browser&apos;s local storage so you can return pseudonymously after refresh. Raw
+          text goes to Krava encrypted memory when the API accepts your key — otherwise mock
+          intake still completes. The dashboard shows sanitized summaries only.
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -80,7 +97,7 @@ export default function IntakePage() {
 
         {sessionId && (
           <p className="mt-4 text-xs text-slate-500">
-            Session: {sessionId.slice(0, 8)}… (return with same browser to continue)
+            Session: {sessionId.slice(0, 8)}… (persisted in this browser)
           </p>
         )}
 
