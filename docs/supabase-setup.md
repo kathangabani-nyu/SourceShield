@@ -1,0 +1,54 @@
+# SourceShield — Supabase project
+
+Created via the **Supabase Cursor plugin** (separate from PriorityTrac).
+
+| Field | Value |
+|-------|-------|
+| Project name | SourceShield |
+| Project ref | `bsarszpxxsntohgazmsy` |
+| Region | us-east-1 |
+| API URL | `https://bsarszpxxsntohgazmsy.supabase.co` |
+| Dashboard | https://supabase.com/dashboard/project/bsarszpxxsntohgazmsy |
+
+## Migrations applied (via plugin)
+
+1. `initial_sourceshield_schema` — `linq_events`, `source_channels`, `tips`, `outbound_messages`, Realtime on `tips`
+2. `tips_realtime_rls` — RLS: anon can **SELECT** `tips` only (sanitized fields); other tables blocked for client roles
+
+Local SQL mirrors: [`supabase/migrations/`](../supabase/migrations/)
+
+## What you still need to do (one manual step)
+
+The plugin can fetch the **anon** key but **not** the **service_role** key. You need it for the webhook worker and API routes.
+
+1. Open [Project Settings → API](https://supabase.com/dashboard/project/bsarszpxxsntohgazmsy/settings/api)
+2. Copy **Project URL**, **anon public**, and **service_role** (secret)
+3. Paste into `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://bsarszpxxsntohgazmsy.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key from dashboard>
+SUPABASE_SERVICE_ROLE_KEY=<service_role secret from dashboard>
+```
+
+Also set on **Vercel** (same three vars) before demo deploy.
+
+## Free tier
+
+This project is on Supabase **Free** ($0/mo at creation). Keep **PriorityTrac paused** and use only this project for the hackathon. See [`docs/free-tier.md`](free-tier.md).
+
+## Verify
+
+```bash
+npm run dev
+curl http://localhost:3000/api/tips
+# → {"tips":[]} when empty
+
+curl -X POST http://localhost:3000/api/seed \
+  -H "Authorization: Bearer $INTERNAL_WORKER_SECRET"
+# → seeded corroboration tips
+```
+
+## Security note (hackathon scope)
+
+`tips` is readable with the anon key (by design — sanitized summaries only for live Realtime dashboard). Sensitive tables (`linq_events`, `source_channels`, `outbound_messages`) deny anon access. Server routes use `service_role`.
