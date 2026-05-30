@@ -46,15 +46,15 @@ export async function processInboundEvent(
   } else if (extracted.kind === "empty") {
     replyText = TEXT_ONLY_REPLY;
   } else {
-    const intake = await runIntakeLlm(handleHash, extracted.text);
-    intakeResult = intake;
+    const run = await runIntakeLlm(handleHash, extracted.text);
+    intakeResult = run.result;
     replyText = extracted.hasMedia
-      ? `${intake.assistant_reply}\n\n${TEXT_ONLY_REPLY}`
-      : intake.assistant_reply;
-    sanitizedSummary = intake.sanitized_summary;
-    duressSignal = intake.duress_signal;
+      ? `${run.result.assistant_reply}\n\n${TEXT_ONLY_REPLY}`
+      : run.result.assistant_reply;
+    sanitizedSummary = run.result.sanitized_summary;
+    duressSignal = run.result.duress_signal;
     claimFingerprint =
-      intake.claims[0]?.fingerprint ?? `claim-${handleHash.slice(0, 12)}`;
+      run.result.claims[0]?.fingerprint ?? `claim-${handleHash.slice(0, 12)}`;
 
     const externalUserId = `source:${handleHash}`;
     try {
@@ -177,59 +177,102 @@ async function markEventFailed(eventId: string) {
     .eq("event_id", eventId);
 }
 
+export type WebIntakeOutcome = {
+  tipId: string | null;
+  reply: string;
+  sanitized_summary: string;
+  duress_signal: "low" | "medium" | "high";
+  next_safe_question: string;
+  engine: "krava" | "mock";
+  memory_recalled: boolean;
+  db_saved: boolean;
+  db_error: string | null;
+  memory_saved: boolean;
+};
+
 export async function processWebIntake(
   sessionId: string,
   text: string
-): Promise<{ tipId: string | null; reply: string }> {
+): Promise<WebIntakeOutcome> {
   const handleHash = hashHandle(`web:${sessionId}`);
-  const intake = await runIntakeLlm(handleHash, text);
+  const run = await runIntakeLlm(handleHash, text);
+  const intake = run.result;
 
   let tipId: string | null = null;
+  let dbSaved = false;
+  let dbError: string | null = null;
 
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin();
-
-    const { data: channel } = await supabase
-      .from("source_channels")
-      .upsert(
-        { linq_handle_hash: handleHash },
-        { onConflict: "linq_handle_hash" }
-      )
-      .select("id")
-      .single();
-
-    if (channel) {
-      const { data: tip } = await supabase
-        .from("tips")
-        .insert({
-          source_channel_id: channel.id,
-          linq_chat_id: "00000000-0000-0000-0000-000000000000",
-          sanitized_summary: intake.sanitized_summary,
-          duress_signal: intake.duress_signal,
-          claim_fingerprint:
-            intake.claims[0]?.fingerprint ?? `web-${handleHash.slice(0, 12)}`,
-          next_safe_question: intake.next_safe_question || null,
-        })
+  if (!isSupabaseConfigured()) {
+    dbError = "Database not configured on server (SUPABASE_SERVICE_ROLE_KEY).";
+  } else {
+    try {
+      const supabase = getSupabaseAdmin();
+      const { data: channel, error: channelError } = await supabase
+        .from("source_channels")
+        .upsert(
+          { linq_handle_hash: handleHash },
+          { onConflict: "linq_handle_hash" }
+        )
         .select("id")
         .single();
 
-      if (tip) {
-        tipId = tip.id;
-        await assignClaimGroup(
-          tip.id,
-          intake.claims[0]?.fingerprint ?? "web-tip",
-          intake.sanitized_summary
-        );
+      if (channelError) {
+        dbError = channelError.message;
+      } else if (channel) {
+        const { data: tip, error: tipError } = await supabase
+          .from("tips")
+          .insert({
+            source_channel_id: channel.id,
+            linq_chat_id: "00000000-0000-0000-0000-000000000000",
+            sanitized_summary: intake.sanitized_summary,
+            duress_signal: intake.duress_signal,
+            claim_fingerprint:
+              intake.claims[0]?.fingerprint ?? `web-${handleHash.slice(0, 12)}`,
+            next_safe_question: intake.next_safe_question || null,
+          })
+          .select("id")
+          .single();
+
+        if (tipError) {
+          dbError = tipError.message;
+        } else if (tip) {
+          tipId = tip.id;
+          dbSaved = true;
+          await assignClaimGroup(
+            tip.id,
+            intake.claims[0]?.fingerprint ?? "web-tip",
+            intake.sanitized_summary
+          );
+        }
       }
+    } catch (err) {
+      dbError = err instanceof Error ? err.message : "Database write failed";
     }
   }
 
+  let memorySaved = false;
   try {
     const { userToken } = await provisionKravaUser(`source:${handleHash}`);
-    await saveRawTranscript(userToken, `[web] ${text}`);
+    const mem = await saveRawTranscript(userToken, `[web] ${text}`);
+    memorySaved = mem.saved;
   } catch {
-    // Non-blocking (premium tier required for memory.save)
+    // Non-blocking
   }
 
-  return { tipId, reply: intake.assistant_reply };
+  if (run.memory_recalled && run.engine === "krava") {
+    intake.assistant_reply = `${intake.assistant_reply} (I have context from your earlier messages in this channel.)`;
+  }
+
+  return {
+    tipId,
+    reply: intake.assistant_reply,
+    sanitized_summary: intake.sanitized_summary,
+    duress_signal: intake.duress_signal,
+    next_safe_question: intake.next_safe_question,
+    engine: run.engine,
+    memory_recalled: run.memory_recalled,
+    db_saved: dbSaved,
+    db_error: dbError,
+    memory_saved: memorySaved,
+  };
 }

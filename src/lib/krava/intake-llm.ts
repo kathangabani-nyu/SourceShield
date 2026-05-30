@@ -43,12 +43,20 @@ function parseIntakeJson(raw: string): IntakeResult | null {
   }
 }
 
+export type IntakeEngine = "krava" | "mock";
+
+export type IntakeRun = {
+  result: IntakeResult;
+  engine: IntakeEngine;
+  memory_recalled: boolean;
+};
+
 export async function runIntakeLlm(
   handleHash: string,
   inboundText: string
-): Promise<IntakeResult> {
+): Promise<IntakeRun> {
   if (!isKravaConfigured()) {
-    return mockIntake(inboundText);
+    return { result: mockIntake(inboundText), engine: "mock", memory_recalled: false };
   }
 
   try {
@@ -56,7 +64,8 @@ export async function runIntakeLlm(
     const { userToken } = await provisionKravaUser(externalUserId);
 
     const priorContext = await searchMemoryContext(userToken, inboundText);
-    const userContent = priorContext
+    const memoryRecalled = priorContext.length > 0;
+    const userContent = memoryRecalled
       ? `Prior context from encrypted memory (for continuity only):\n${priorContext}\n\nNew inbound message:\n${inboundText}`
       : inboundText;
 
@@ -73,17 +82,21 @@ export async function runIntakeLlm(
     }
 
     if (!result) {
-      return structuredFallback();
+      return {
+        result: structuredFallback(),
+        engine: "krava",
+        memory_recalled: memoryRecalled,
+      };
     }
 
     if (result.duress_signal === "high") {
       result.assistant_reply = DURESS_PAUSE_REPLY;
     }
 
-    return result;
+    return { result, engine: "krava", memory_recalled: memoryRecalled };
   } catch (err) {
     if (isKravaRuntimeError(err)) {
-      return mockIntake(inboundText);
+      return { result: mockIntake(inboundText), engine: "mock", memory_recalled: false };
     }
     throw err;
   }
@@ -97,6 +110,20 @@ function structuredFallback(): IntakeResult {
     claims: [{ text: "Unparsed tip", fingerprint: "unparsed-tip" }],
     next_safe_question: "Can you describe what happened in general terms?",
   };
+}
+
+/** Regex pass so mock mode still shows a believable sanitization on stage. */
+function heuristicSanitize(text: string): string {
+  let s = text.trim();
+  s = s.replace(/\b(mr|mrs|ms|dr)\.?\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b/gi, "a manager");
+  s = s.replace(/\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/g, "an official");
+  s = s.replace(
+    /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2},?\s+\d{4}\b/gi,
+    "a recent date"
+  );
+  s = s.replace(/\b\$[\d,]+(?:\.\d+)?[kmb]?\b/gi, "a large sum");
+  s = s.replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g, "a recent date");
+  return s.replace(/\s{2,}/g, " ").trim();
 }
 
 /** Offline/dev fallback when Krava keys are missing or API rejects the call. */
@@ -118,13 +145,25 @@ export function mockIntake(inboundText: string): IntakeResult {
     };
   }
 
+  const sanitized = heuristicSanitize(inboundText);
+  const hasDetail = inboundText.length > 80;
+
   return {
-    assistant_reply:
-      "Thank you for reaching out. We received your message and a journalist will review it. Please share details in text only.",
-    sanitized_summary: "New tip received via pseudonymous channel.",
+    assistant_reply: hasDetail
+      ? "Thank you — we received your details. A journalist will review the sanitized summary below. Reply here if you have more to add."
+      : "Thank you for reaching out. We received your message and a journalist will review it. Please share details in text only.",
+    sanitized_summary: hasDetail
+      ? `Source alleges misconduct involving ${sanitized.slice(0, 220)}`
+      : "New tip received via pseudonymous channel.",
     duress_signal: "low",
-    claims: [{ text: "General tip", fingerprint: "general-tip" }],
-    next_safe_question: "Can you describe the nature of the concern?",
+    claims: [
+      {
+        text: "Contract or procurement concern",
+        fingerprint: "contract-concern-mock",
+      },
+    ],
+    next_safe_question:
+      "Can you describe the role or department involved without naming anyone?",
   };
 }
 

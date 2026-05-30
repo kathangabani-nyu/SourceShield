@@ -25,5 +25,21 @@ export async function POST(request: NextRequest) {
     session_id: sessionId,
     tip_id: result.tipId,
     reply: result.reply,
+    sanitized_summary: result.sanitized_summary,
+    duress_signal: result.duress_signal,
+    next_safe_question: result.next_safe_question,
+    engine: result.engine,
+    memory_recalled: result.memory_recalled,
+    db_saved: result.db_saved,
+    db_error: result.db_error,
+    memory_saved: result.memory_saved,
+    warnings: [
+      ...(result.engine === "mock"
+        ? [
+            "Krava inference unavailable — showing regex mock sanitization. Fix KRAVA_APP_KEY for live demo.",
+          ]
+        : []),
+      ...(result.db_error ? [`Dashboard card not saved: ${result.db_error}`] : []),
+    ],
   });
 }

@@ -1,65 +1,80 @@
 import { isKravaConfigured } from "./krava/client";
 import { isLinqConfigured } from "./linq/client";
 import { isSupabaseConfigured } from "./supabase/server";
+import type { LiveProbeResult } from "./health-probes";
 
-export type IntegrationStatus = {
-  krava: {
-    configured: boolean;
-    label: string;
-    detail: string;
-  };
-  memory: {
-    label: string;
-    detail: string;
-  };
-  database: {
-    configured: boolean;
-    label: string;
-    detail: string;
-  };
-  linq: {
-    configured: boolean;
-    label: string;
-    detail: string;
-  };
-  dashboard_auth: boolean;
-  worker_auth: boolean;
+export type IntegrationChip = {
+  configured: boolean;
+  live: boolean;
+  label: string;
+  detail: string;
 };
 
-export function getIntegrationStatus(): IntegrationStatus {
-  const kravaConfigured = isKravaConfigured();
+export type IntegrationStatusPayload = {
+  krava: IntegrationChip;
+  memory: IntegrationChip;
+  database: IntegrationChip;
+  linq: IntegrationChip;
+  demo_ready: boolean;
+};
+
+export function buildIntegrationStatus(
+  probes: LiveProbeResult
+): IntegrationStatusPayload {
   const linqConfigured = isLinqConfigured();
-  const supabaseConfigured = isSupabaseConfigured();
+
+  const kravaLive = probes.krava.live;
+  const dbLive = probes.database.live;
 
   return {
     krava: {
-      configured: kravaConfigured,
-      label: kravaConfigured ? "Krava private inference" : "Krava mock intake",
-      detail: kravaConfigured
-        ? "Live when API accepts key; auto-falls back to mock on 401/errors"
-        : "Set KRAVA_APP_KEY or use keyword mock path",
+      configured: probes.krava.configured,
+      live: kravaLive,
+      label: kravaLive
+        ? "Krava private inference — live"
+        : probes.krava.configured
+          ? "Krava — mock fallback active"
+          : "Krava — mock intake",
+      detail: probes.krava.detail,
     },
     memory: {
-      label: kravaConfigured ? "Encrypted memory (Krava)" : "Encrypted memory (off)",
-      detail: kravaConfigured
-        ? "Raw transcripts saved server-side; may skip on non-premium tier"
-        : "Requires Krava user token",
+      configured: probes.krava.configured,
+      live: kravaLive,
+      label: kravaLive ? "Encrypted memory (Krava)" : "Encrypted memory — unavailable",
+      detail: kravaLive
+        ? "Raw text saved per source; never stored in Postgres"
+        : "Requires a working Krava key",
     },
     database: {
-      configured: supabaseConfigured,
-      label: supabaseConfigured ? "Sanitized DB (Supabase)" : "Sanitized DB (off)",
-      detail: supabaseConfigured
-        ? "Tips via service role; no raw text in Postgres"
-        : "Set SUPABASE_SERVICE_ROLE_KEY for cards",
+      configured: probes.database.configured,
+      live: dbLive,
+      label: dbLive ? "Sanitized DB — live" : "Sanitized DB — error",
+      detail: probes.database.detail,
     },
     linq: {
       configured: linqConfigured,
-      label: linqConfigured ? "Linq iMessage (live)" : "Linq unavailable — dry-run",
+      live: linqConfigured,
+      label: linqConfigured ? "Linq iMessage — live" : "Linq — follow-up preview only",
       detail: linqConfigured
-        ? "Webhook + outbound sends enabled"
-        : "Follow-ups preview rewrite only; web intake still works",
+        ? "Two-way iMessage enabled"
+        : "Safe-question rewrite works on web tips without iMessage",
     },
-    dashboard_auth: Boolean(process.env.DASHBOARD_SECRET),
-    worker_auth: Boolean(process.env.INTERNAL_WORKER_SECRET),
+    demo_ready: kravaLive && dbLive,
   };
+}
+
+/** Static snapshot without network probes (legacy). */
+export function getIntegrationStatusStatic() {
+  return buildIntegrationStatus({
+    krava: {
+      configured: isKravaConfigured(),
+      live: false,
+      detail: "Run /api/health for live probe",
+    },
+    database: {
+      configured: isSupabaseConfigured(),
+      live: false,
+      detail: "Run /api/health for live probe",
+    },
+  });
 }

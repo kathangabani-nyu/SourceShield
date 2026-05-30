@@ -10,12 +10,13 @@ export default function HomePage() {
         </p>
         <h1 className="mt-4 text-4xl font-bold tracking-tight">SourceShield</h1>
         <p className="mt-4 text-lg text-slate-300">
-          Live pseudonymous follow-up for newsroom tips — with privacy limits made explicit.
+          Pseudonymous newsroom tips — raw text stays in Krava; journalists see sanitized summaries
+          only.
         </p>
 
         <section className="mt-8">
           <h2 className="text-sm font-medium uppercase tracking-wider text-slate-500">
-            Live integration status
+            System status
           </h2>
           <div className="mt-3">
             <IntegrationStatusChips />
@@ -33,56 +34,39 @@ export default function HomePage() {
             href="/intake"
             className="rounded-md border border-slate-700 px-5 py-2.5 text-sm font-medium hover:border-slate-500"
           >
-            Web intake fallback
-          </Link>
-          <Link
-            href="/api/health"
-            className="rounded-md border border-slate-800 px-5 py-2.5 text-sm text-slate-400 hover:text-white"
-          >
-            Health check
+            Submit a tip (web)
           </Link>
         </div>
 
         <section className="mt-16">
-          <h2 className="text-lg font-semibold text-white">Headline demo</h2>
+          <h2 className="text-lg font-semibold text-white">60-second demo</h2>
           <ol className="mt-4 list-inside list-decimal space-y-2 text-slate-300">
-            <li>Source texts the Linq iMessage number → sanitized card appears live</li>
-            <li>Journalist sends an unsafe follow-up → app rewrites it → lands on phone</li>
-            <li>Source replies → two-way loop closes on stage</li>
+            <li>
+              <Link href="/intake" className="text-sky-400 hover:underline">
+                /intake
+              </Link>{" "}
+              — tip with a name and date → watch raw vs sanitized side by side
+            </li>
+            <li>Dashboard — select the card → unsafe follow-up → rewritten before send</li>
+            <li>Submit again in the same browser — Krava memory recalls prior context</li>
           </ol>
-          <p className="mt-4 text-sm text-slate-400">
-            <strong className="text-slate-300">No Linq keys?</strong> Use{" "}
-            <Link href="/intake" className="text-sky-400 hover:underline">
-              /intake
-            </Link>{" "}
-            plus dashboard <strong className="text-slate-300">Preview rewrite (dry-run)</strong> —
-            intentional, not broken.
-          </p>
         </section>
 
-        <section className="mt-12 rounded-lg border border-amber-900/40 bg-amber-950/20 p-6">
-          <h2 className="text-lg font-semibold text-amber-200">Limits (what we do NOT claim)</h2>
-          <ul className="mt-4 list-inside list-disc space-y-2 text-sm text-amber-100/80">
+        <section className="mt-10 rounded-lg border border-slate-800 bg-slate-900/50 p-5">
+          <h2 className="text-sm font-semibold text-slate-200">Two limits that matter</h2>
+          <ul className="mt-3 space-y-2 text-sm text-slate-400">
             <li>
-              <strong className="text-amber-100">Pseudonymous, not anonymous.</strong> Linq,
-              Apple, and carriers see phone metadata. Our webhook sees the inbound payload.
+              <strong className="text-slate-300">Pseudonymous ≠ anonymous</strong> — metadata
+              exists outside our DB.
             </li>
             <li>
-              Journalists never see phone numbers or raw transcripts on this dashboard.
-            </li>
-            <li>
-              Similar-claim grouping means &ldquo;distinct channels report a similar
-              claim&rdquo; — independence is a newsroom judgment, not a cryptographic guarantee.
-            </li>
-            <li>
-              Coercion-risk flags are model signals; the bot pauses neutrally and never asks
-              &ldquo;Are you being forced?&rdquo;
-            </li>
-            <li>
-              Passkey return applies to the web fallback path only — iMessage sources return via
-              the same Linq thread.
+              <strong className="text-slate-300">Similar claim ≠ independent corroboration</strong>{" "}
+              — channel count is a signal, not proof.
             </li>
           </ul>
+          <Link href="/limits" className="mt-3 inline-block text-sm text-sky-400 hover:underline">
+            Full limits &amp; scope →
+          </Link>
         </section>
       </main>
     </div>

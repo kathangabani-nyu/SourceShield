@@ -57,6 +57,8 @@ export default function DashboardPage() {
   const [sending, setSending] = useState(false);
   const [lastResult, setLastResult] = useState<FollowUpResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dbDown, setDbDown] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   const loadTips = useCallback(async () => {
     try {
@@ -67,14 +69,43 @@ export default function DashboardPage() {
       }
       setNeedsAuth(false);
       const data = await res.json();
+      if (!res.ok) {
+        setTips([]);
+        setDbDown(true);
+        setError(data.message ?? data.error ?? `Tips API error (${res.status})`);
+        return;
+      }
+      setDbDown(false);
       setTips(data.tips ?? []);
       setError(null);
     } catch {
-      setError("Could not load tips.");
+      setDbDown(true);
+      setError("Could not reach /api/tips — check deployment and DASHBOARD_SECRET.");
     } finally {
       setLoading(false);
     }
   }, []);
+
+  async function loadDemoCards() {
+    setSeeding(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/demo/seed", {
+        method: "POST",
+        headers: getDashboardAuthHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message ?? data.error ?? "Could not load demo cards");
+        return;
+      }
+      await loadTips();
+    } catch {
+      setError("Demo seed request failed");
+    } finally {
+      setSeeding(false);
+    }
+  }
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -207,15 +238,33 @@ export default function DashboardPage() {
           <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-slate-500">
             Case cards
           </h2>
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-900/50 bg-red-950/30 p-4 text-sm text-red-200">
+              <p className="font-medium">Dashboard cannot load tips</p>
+              <p className="mt-1 opacity-90">{error}</p>
+            </div>
+          )}
           {loading && <p className="text-slate-400">Loading…</p>}
-          {!loading && tips.length === 0 && (
-            <p className="rounded-lg border border-dashed border-slate-700 p-6 text-slate-400">
-              No tips yet. Use{" "}
-              <Link href="/intake" className="text-sky-400 hover:underline">
-                web intake
-              </Link>{" "}
-              or seed demo data with your worker secret.
-            </p>
+          {!loading && !dbDown && tips.length === 0 && (
+            <div className="rounded-lg border border-dashed border-slate-700 p-6 text-slate-400">
+              <p>No case cards yet.</p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link
+                  href="/intake"
+                  className="rounded-md border border-slate-600 px-3 py-1.5 text-sm text-sky-300 hover:border-sky-500"
+                >
+                  Submit via web intake
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => void loadDemoCards()}
+                  disabled={seeding}
+                  className="rounded-md bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700 disabled:opacity-50"
+                >
+                  {seeding ? "Loading demo…" : "Load demo case cards"}
+                </button>
+              </div>
+            </div>
           )}
           <ul className="space-y-3">
             {tips.map((tip) => (
