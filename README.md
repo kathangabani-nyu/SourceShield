@@ -1,6 +1,6 @@
 # SourceShield
 
-**Pseudonymous two-way newsroom tips** — sources reach out over iMessage (Linq) or web intake; journalists see **sanitized case cards** and send **safe follow-ups**. Raw text never lands in your database.
+**Pseudonymous two-way newsroom tips** — sources reach out over iMessage (Linq) or anonymous web intake; journalists see **sanitized case cards** and send **safe follow-ups**. Raw text never lands in your database.
 
 Built for the **Krava × Linq** hackathon. Live demo: [source-shield.vercel.app](https://source-shield.vercel.app)
 
@@ -12,13 +12,44 @@ Whistleblowers and tipsters need to talk to journalists without doxxing themselv
 
 SourceShield sits in the middle: **private intake and memory on Krava**, **live messaging on Linq**, **sanitized state in Supabase**.
 
+**Split-storage rule:** if it can identify someone in a newsroom tool, it does not go in the app DB.
+
+---
+
+## Workflow (three paths)
+
+### 1. iMessage (Linq) — pseudonymous two-way
+
+1. Source texts the newsroom Linq number.
+2. Linq posts `message.received` to `POST /api/linq/webhook` (HMAC-verified).
+3. Webhook **ACKs immediately** (`waitUntil` → background worker) — handles Linq’s ~10s timeout and at-least-once delivery.
+4. Worker runs Krava intake LLM, saves **raw** to Krava `memory.save`, inserts **sanitized** row in Supabase, replies via Linq with an idempotent key (`reply-{event_id}`).
+
+Phone handles are **SHA-256 hashed** before storage; `linq_chat_id` stays server-side only.
+
+### 2. Web intake — anonymous at the application layer
+
+1. Source submits at [`/intake`](https://source-shield.vercel.app/intake) — no login, no phone, no `localStorage` session, no analytics.
+2. Server issues a **case code** (UUIDv4) or resumes with one the user holds.
+3. Channel identity is `hash("web:" + sessionId)` — same Krava + Supabase pipeline as iMessage.
+4. `memory.search` can recall prior context when the user returns with their case code.
+
+`POST /api/intake/web` does not read or persist IP/User-Agent; `Cache-Control: no-store`. Network anonymity is Tor/onion — see [docs/anonymity.md](docs/anonymity.md).
+
+### 3. Journalist dashboard
+
+1. Journalists see sanitized summaries, duress signals, suggested safe questions, and similar-claim grouping (metadata only).
+2. Unsafe follow-ups (e.g. *“Did John Smith say this on March 3rd?”*) go through **regex strip**, then optional **Krava rewrite**, before Linq send.
+3. **Dry-run** works without Linq (web-only tips); live send when Linq keys are configured.
+
 ---
 
 ## What judges should see in 60 seconds
 
 1. **[Web intake](https://source-shield.vercel.app/intake)** — Submit a tip with a name, date, and dollar amount. The UI shows **raw (Krava-only)** vs **sanitized (dashboard/Postgres)** side by side.
-2. **[Dashboard](https://source-shield.vercel.app/dashboard)** — Select the card. Type an unsafe follow-up (*“Did John Smith say this on March 3rd?”*). Watch it **rewrite** before send (dry-run without Linq; live send with Linq).
-3. **Resume with your case code** — Submit again using the case code from step 1; Krava memory can **recall prior context** (when the Krava key is live). No browser-stored session.
+2. **[Dashboard](https://source-shield.vercel.app/dashboard)** — Select a card. Type an unsafe follow-up. Watch it **rewrite** before send (dry-run without Linq; live send with Linq).
+3. **Resume with your case code** — Submit again using the case code from step 1; Krava memory can **recall prior context** (when the Krava key is live).
+4. **[Story](https://source-shield.vercel.app/story)** (optional) — Scroll-through narrative mapping Krava’s four guarantees to SourceShield, with live intake/dashboard demos.
 
 The landing page **system status chips** probe Krava and Supabase in real time — degraded mode is visible, not hidden behind “No tips yet.”
 
@@ -33,9 +64,7 @@ The landing page **system status chips** probe Krava and Supabase in real time �
 | Phone / chat identifiers | Server + Linq only | **Not** exposed on dashboard API |
 | Journalist follow-up drafts | Rewritten in-app | Source sees safe version on iMessage |
 
-**Split-storage rule:** if it can identify someone in a newsroom tool, it does not go in the app DB.
-
-We say **pseudonymous**, not anonymous — Linq, Apple, and carriers still see phone metadata. See [Limits & scope](/limits) for the full honest list.
+We say **pseudonymous** on the iMessage path, not anonymous — Linq, Apple, and carriers still see phone metadata. Web intake is **anonymous at the app layer** on the hosted demo; strongest path is Tor + self-hosted onion. See [Limits & scope](https://source-shield.vercel.app/limits) and [docs/anonymity.md](docs/anonymity.md).
 
 ---
 
@@ -44,7 +73,7 @@ We say **pseudonymous**, not anonymous — Linq, Apple, and carriers still see p
 ```mermaid
 sequenceDiagram
   participant Source as Source (iMessage / Web)
-  participant Linq as Linq Webhook
+  participant Linq as Linq
   participant WH as POST /api/linq/webhook
   participant Worker as POST /api/linq/process
   participant Krava as Krava (inference + memory)
@@ -55,32 +84,43 @@ sequenceDiagram
   Linq->>WH: message.received (HMAC)
   WH-->>Linq: 200 ACK (fast)
   WH->>Worker: waitUntil(trigger)
-  Worker->>Krava: agentChat + memory.save(raw)
+  Worker->>Krava: platform chat + memory.save(raw)
   Worker->>DB: insert sanitized tip
   Worker->>Linq: reply (idempotent)
-  Dash->>DB: GET /api/tips (service role)
+  Dash->>DB: GET /api/tips
   Dash->>Krava: safe-question rewrite (optional)
   Dash->>Linq: journalist follow-up (when configured)
 ```
 
-**ACK-first webhook** — Linq’s ~10s timeout and at-least-once delivery are handled by deduping `event_id`, returning 200 immediately, and processing in a background worker (`waitUntil` on Vercel).
+**ACK-first webhook** — dedupe `event_id` in Postgres, return 200 immediately, process in a background worker (`waitUntil` on Vercel).
 
 ---
 
 ## Krava integration
 
+SourceShield uses four Krava primitives end-to-end:
+
+| Guarantee | SourceShield usage |
+|-----------|-------------------|
+| **Pseudonymous identity** | `users.getOrCreate("source:" + SHA-256(handle))` → scoped `userToken` per source |
+| **Secure memory** | `memory.save` for raw transcripts; `memory.search` for multi-turn continuity (AES-256-GCM) |
+| **Private LLM** | Structured JSON intake — reply, sanitized summary, duress signal, claims, safe question |
+| **Private inference path** | Chat via `POST /api/platform/chat` (Bearer `userToken`, SSE) — BYO-agent path, not OpenClaw gateway |
+
 | Capability | Implementation |
 |------------|----------------|
-| Private inference | `kimi-k2-5` via Krava `agentChat` — JSON intake (reply, summary, duress, claims, suggested question) |
-| Encrypted memory | `memory.save` for raw transcripts; `memory.search` for multi-turn continuity |
-| Per-source scope | `users.getOrCreate` keyed by hashed handle (`source:<hash>`) |
-| Safe follow-ups | Regex strip + optional Krava rewrite for journalist questions |
-| Corroboration fallback | Second LLM pass to group similar sanitized claims |
-| Degradation | 401 / API errors → **mock intake** with heuristic sanitization (demo still runs) |
+| Dual clients | Platform client (`KRAVA_APP_KEY`) for provisioning; per-user client with `userToken` for memory + chat |
+| Intake output | Zod-validated JSON: `assistant_reply`, `sanitized_summary`, `duress_signal`, `claims[]`, `next_safe_question` |
+| Duress handling | High signal → fixed neutral pause reply; never asks “Are you being forced?” |
+| Safe follow-ups | Regex strip → optional Krava rewrite (`via: regex \| regex+krava`) |
+| Corroboration | Fingerprint match, then second LLM pass on **sanitized** summaries only |
+| Degradation | Missing/401 key → **mock intake** with heuristic sanitization (demo still runs) |
 
 ```bash
 npm run krava:doctor   # checks KRAVA_APP_KEY + provisioning
 ```
+
+Memory save failures are **non-blocking** — the source still gets a reply and a sanitized card.
 
 ---
 
@@ -88,10 +128,11 @@ npm run krava:doctor   # checks KRAVA_APP_KEY + provisioning
 
 | Piece | Detail |
 |-------|--------|
-| Webhook | `message.received` only; HMAC verify + 5‑min replay window |
-| Outbound | `idempotency_key` on every send (SDK `message` shape) |
+| Webhook | `message.received` only; HMAC verify + replay window |
+| Outbound | `idempotency_key` inside SDK `message` shape |
 | Version | Webhook URL pinned to `?version=2026-02-03` (`MessageEventV2`) |
 | Register | `npm run register-webhook` after deploy |
+| Media | Text-only policy — media-only inbound gets a safety reply, no blob storage in DB |
 
 Without Linq keys, follow-ups run in **preview (dry-run)** mode — intentional for conference demos.
 
@@ -131,8 +172,9 @@ npm run dev
 | Route | Purpose |
 |-------|---------|
 | `/` | Overview + live integration status |
-| `/intake` | Web tip path (case-code continuity — no browser session) |
+| `/intake` | Anonymous web tips + case-code continuity |
 | `/dashboard` | Journalist case cards + safe follow-up |
+| `/story` | Scroll-through Krava × SourceShield demo narrative |
 | `/limits` | Full “what we do not claim” |
 | `/api/health` | Probes Krava + Supabase (JSON) |
 
@@ -210,7 +252,7 @@ Full talk track: [`docs/demo-rehearsal.md`](docs/demo-rehearsal.md)
 | Method | Path | Auth | Role |
 |--------|------|------|------|
 | `GET` | `/api/health` | Public | Live probes + integration status |
-| `POST` | `/api/intake/web` | Public | Web tip intake |
+| `POST` | `/api/intake/web` | Public | Web tip intake (`Cache-Control: no-store`) |
 | `GET` | `/api/tips` | `DASHBOARD_SECRET` (prod) | List sanitized cards |
 | `POST` | `/api/tips/[id]/follow-up` | `DASHBOARD_SECRET` (prod) | Rewrite (+ Linq send if configured) |
 | `POST` | `/api/demo/seed` | `DASHBOARD_SECRET` (prod) | Demo case cards |
@@ -239,15 +281,16 @@ src/
   app/
     api/          # Webhook, worker, intake, tips, health
     dashboard/    # Journalist UI
-    intake/       # Web fallback
+    intake/       # Anonymous web intake
+    story/        # Krava × SourceShield scroll narrative
     limits/       # Honest scope page
   lib/
-    krava/        # LLM intake, memory, chat stream
+    krava/        # Platform chat, memory, intake LLM, safe rewrite
     linq/         # Client, webhook verify, extract text
     supabase/     # Admin + browser clients
-  components/     # Integration status chips
+  components/     # Integration status chips, story scenes
 supabase/migrations/
-docs/             # Setup, API verification, rehearsal, free tier
+docs/             # Setup, API verification, rehearsal, anonymity, free tier
 ```
 
 ---
@@ -265,12 +308,14 @@ docs/             # Setup, API verification, rehearsal, free tier
 
 ## Honest limits (short)
 
-- **Pseudonymous ≠ anonymous** — metadata exists outside our DB.
+- **Pseudonymous ≠ anonymous** on iMessage — metadata exists outside our DB.
+- **Web intake** — anonymous at the app layer; Vercel platform logs may still exist.
 - **Similar claim ≠ independent corroboration** — channel count is a signal, not proof.
 - **Coercion flag** — model signal; bot pauses neutrally, never asks “Are you being forced?”
-- **Web path** — case-code continuity (no `localStorage`); see [anonymity model](docs/anonymity.md).
+- **Attachments** — text-only; media declined to avoid metadata leaks.
+- **Case code** — user-held resume secret; we cannot recover a lost code.
 
-[Full limits →](/limits) (or [live](https://source-shield.vercel.app/limits))
+[Full limits →](https://source-shield.vercel.app/limits)
 
 ---
 
