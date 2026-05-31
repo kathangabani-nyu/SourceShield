@@ -1,42 +1,90 @@
 import Link from "next/link";
 
+const LIMITS = [
+  {
+    index: "01",
+    title: "Anonymous web intake",
+    body: "No login, no phone, no browser-stored session, no analytics, and no third-party requests. The app does not intentionally read or persist network metadata. Full network anonymity requires Tor Browser or an onion mirror.",
+  },
+  {
+    index: "02",
+    title: "Krava memory boundary",
+    body: "Raw text is processed and may be held in Krava encrypted memory. The newsroom database stores sanitized summaries, never the original transcript.",
+  },
+  {
+    index: "03",
+    title: "Case-code recovery",
+    body: "The case code is the only resume secret. If a source loses it, SourceShield cannot recover the thread for them.",
+  },
+  {
+    index: "04",
+    title: "Linq is different",
+    body: "The iMessage path is pseudonymous, not anonymous. Carriers, Apple, and Linq can still see phone-message metadata even though the journalist dashboard cannot.",
+  },
+  {
+    index: "05",
+    title: "Signals are review aids",
+    body: "Similar-claim grouping is not proof of independence, and coercion-risk flags are model signals, not legal or safety determinations.",
+  },
+  {
+    index: "06",
+    title: "Text only",
+    body: "Attachments are declined. Sources are asked for text-only tips so sensitive files do not leak identity through embedded metadata.",
+  },
+];
+
 export default function LimitsPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <main className="mx-auto max-w-2xl px-6 py-16">
-        <Link href="/" className="text-sm text-slate-400 hover:text-white">
-          ← SourceShield
-        </Link>
-        <h1 className="mt-6 text-2xl font-semibold">Limits &amp; honest scope</h1>
-        <ul className="mt-8 list-inside list-disc space-y-4 text-slate-300">
-          <li>
-            <strong className="text-white">Anonymous web intake (application layer).</strong> No
-            login, no phone, no browser-stored session, no analytics, no third-party requests. The
-            newsroom database stores only sanitized summaries; raw text is processed and may be held
-            in Krava encrypted memory. The case code is the only resume secret — the server keeps
-            only a one-way channel hash. The app does not intentionally read or persist network
-            metadata; full network anonymity requires Tor Browser or an onion mirror.
-          </li>
-          <li>
-            <strong className="text-white">Pseudonymous iMessage path.</strong> Two-way follow-up
-            over Linq without exposing identity in the newsroom — but carriers, Apple, and Linq still
-            see phone metadata. Not the same as anonymous web intake.
-          </li>
-          <li>
-            Journalists never see phone numbers, chat IDs, or raw transcripts on the dashboard.
-          </li>
-          <li>
-            Similar-claim grouping = &ldquo;distinct channels report a similar claim&rdquo; — not
-            proof of independence.
-          </li>
-          <li>Coercion-risk flags are model signals, not legal or safety determinations.</li>
-          <li>Attachments are declined; sources are asked for text-only tips.</li>
-        </ul>
-        <p className="mt-8 text-sm text-slate-400">
-          Full threat model and deploy notes: <code className="text-slate-300">docs/anonymity.md</code>{" "}
-          in the repository.
-        </p>
-      </main>
+    <div className="source-shield-home">
+      <div className="ss-ambient" aria-hidden="true">
+        <div className="ss-aurora ss-a1" />
+        <div className="ss-aurora ss-a2" />
+        <div className="ss-aurora ss-a3" />
+      </div>
+      <div className="ss-vignette" aria-hidden="true" />
+      <div className="ss-grain" aria-hidden="true" />
+
+      <div className="ss-page">
+        <nav className="ss-nav" aria-label="Primary">
+          <Link href="/" className="ss-mark">
+            <span className="ss-glyph" aria-hidden="true" />
+            SourceShield
+          </Link>
+          <div className="ss-navlinks">
+            <Link href="/intake">Source intake</Link>
+            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/story">Demo story</Link>
+          </div>
+        </nav>
+
+        <main className="ss-limits-main">
+          <section className="ss-wrap ss-limits-hero">
+            <p className="ss-kicker">Honest limits</p>
+            <h1 className="ss-section-title">The shield is real, and so are its edges.</h1>
+            <p className="ss-section-lede">
+              SourceShield is designed around minimal exposure. It still names the boundary clearly,
+              so sources know when they need Tor, an onion mirror, or a different channel entirely.
+            </p>
+          </section>
+
+          <section className="ss-wrap ss-limits-page-grid" aria-label="SourceShield limits">
+            {LIMITS.map((limit) => (
+              <article key={limit.index} className="ss-limit">
+                <span>{limit.index}</span>
+                <h2>{limit.title}</h2>
+                <p>{limit.body}</p>
+              </article>
+            ))}
+          </section>
+
+          <section className="ss-wrap ss-limits-doc">
+            <p>
+              Full threat model and deploy notes live in{" "}
+              <code>docs/anonymity.md</code>.
+            </p>
+          </section>
+        </main>
+      </div>
     </div>
   );
 }

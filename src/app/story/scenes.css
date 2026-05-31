@@ -61,7 +61,7 @@
    PROBLEM — data leaking toward a watching eye
    ============================================================ */
 #s-problem .display em {
-  background: linear-gradient(120deg, oklch(0.9 0.03 40), var(--warn) 60%, oklch(0.78 0.1 40));
+  background-image: linear-gradient(120deg, oklch(0.9 0.03 40), var(--warn) 60%, oklch(0.78 0.1 40));
   -webkit-background-clip: text; background-clip: text;
 }
 .leak {

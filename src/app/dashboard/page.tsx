@@ -29,20 +29,41 @@ type FollowUpResult = {
 };
 
 function DuressBadge({ level }: { level: Tip["duress_signal"] }) {
-  const styles = {
-    low: "bg-emerald-100 text-emerald-800",
-    medium: "bg-amber-100 text-amber-800",
-    high: "bg-red-100 text-red-800",
-  };
   const labels = {
     low: "Coercion risk: low",
     medium: "Coercion risk: medium",
     high: "Coercion risk: high",
   };
+
+  return <span className={`ss-duress ss-duress-${level}`}>{labels[level]}</span>;
+}
+
+function AppChrome({ children }: { children: React.ReactNode }) {
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${styles[level]}`}>
-      {labels[level]}
-    </span>
+    <div className="source-shield-home">
+      <div className="ss-ambient" aria-hidden="true">
+        <div className="ss-aurora ss-a1" />
+        <div className="ss-aurora ss-a2" />
+        <div className="ss-aurora ss-a3" />
+      </div>
+      <div className="ss-vignette" aria-hidden="true" />
+      <div className="ss-grain" aria-hidden="true" />
+
+      <div className="ss-page">
+        <nav className="ss-nav" aria-label="Primary">
+          <Link href="/" className="ss-mark">
+            <span className="ss-glyph" aria-hidden="true" />
+            SourceShield
+          </Link>
+          <div className="ss-navlinks">
+            <Link href="/intake">Source intake</Link>
+            <Link href="/story">Demo story</Link>
+            <Link href="/limits">Honest limits</Link>
+          </div>
+        </nav>
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -80,7 +101,7 @@ export default function DashboardPage() {
       setError(null);
     } catch {
       setDbDown(true);
-      setError("Could not reach /api/tips — check deployment and DASHBOARD_SECRET.");
+      setError("Could not reach /api/tips. Check deployment and DASHBOARD_SECRET.");
     } finally {
       setLoading(false);
     }
@@ -101,7 +122,7 @@ export default function DashboardPage() {
       }
       await loadTips();
     } catch {
-      setError("Demo seed request failed");
+      setError("Demo seed request failed.");
     } finally {
       setSeeding(false);
     }
@@ -174,217 +195,254 @@ export default function DashboardPage() {
   }
 
   const selected = tips.find((t) => t.id === selectedId);
+  const highRiskCount = tips.filter((tip) => tip.duress_signal === "high").length;
+  const corroboratedCount = tips.filter((tip) => tip.distinct_channel_count > 1).length;
 
   if (needsAuth) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-slate-100">
-        <form
-          onSubmit={handleAuthSubmit}
-          className="w-full max-w-md rounded-lg border border-slate-800 bg-slate-900 p-6"
-        >
-          <h1 className="text-lg font-semibold">Dashboard access</h1>
-          <p className="mt-2 text-sm text-slate-400">
-            Enter <code className="text-sky-300">DASHBOARD_SECRET</code> from your env (stored in
-            this browser session only).
-          </p>
-          <input
-            type="password"
-            value={authInput}
-            onChange={(e) => setAuthInput(e.target.value)}
-            className="mt-4 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-            placeholder="Bearer secret"
-            autoComplete="off"
-          />
-          <button
-            type="submit"
-            className="mt-4 w-full rounded-md bg-sky-600 py-2 text-sm font-medium hover:bg-sky-500"
-          >
-            Unlock dashboard
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              clearDashboardSecret();
-              setAuthInput("");
-            }}
-            className="mt-2 w-full text-xs text-slate-500 hover:text-slate-300"
-          >
-            Clear saved secret
-          </button>
-        </form>
-      </div>
+      <AppChrome>
+        <main className="ss-dashboard-main ss-auth-main">
+          <form onSubmit={handleAuthSubmit} className="ss-glass ss-auth-card">
+            <p className="ss-kicker">Journalist access</p>
+            <h1 className="ss-section-title">Unlock the desk.</h1>
+            <p className="ss-section-lede">
+              Enter the dashboard secret from your environment. It is stored in this browser session
+              only.
+            </p>
+            <label htmlFor="dashboard-secret">Dashboard secret</label>
+            <input
+              id="dashboard-secret"
+              type="password"
+              value={authInput}
+              onChange={(e) => setAuthInput(e.target.value)}
+              placeholder="Bearer secret"
+              autoComplete="off"
+            />
+            <button type="submit" className="ss-btn ss-btn-primary">
+              Unlock dashboard
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                clearDashboardSecret();
+                setAuthInput("");
+              }}
+              className="ss-auth-clear"
+            >
+              Clear saved secret
+            </button>
+          </form>
+        </main>
+      </AppChrome>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800 px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
+    <AppChrome>
+      <main className="ss-dashboard-main">
+        <section className="ss-wrap ss-dashboard-hero">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">SourceShield</h1>
-            <p className="text-sm text-slate-400">Journalist dashboard — pseudonymous tips only</p>
+            <p className="ss-kicker">Journalist view</p>
+            <h1 className="ss-section-title">The desk. Nothing else.</h1>
+            <p className="ss-section-lede">
+              Review sanitized case cards, keep raw transcripts out of the newsroom database, and
+              rewrite follow-ups before they reach a source.
+            </p>
           </div>
-          <Link href="/" className="text-sm text-slate-400 hover:text-white">
-            Limits &amp; overview
-          </Link>
-        </div>
-        <div className="mx-auto mt-4 max-w-6xl">
-          <IntegrationStatusChips />
-        </div>
-      </header>
-
-      <main className="mx-auto grid max-w-6xl gap-6 p-6 lg:grid-cols-2">
-        <section>
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-slate-500">
-            Case cards
-          </h2>
-          {error && (
-            <div className="mb-4 rounded-lg border border-red-900/50 bg-red-950/30 p-4 text-sm text-red-200">
-              <p className="font-medium">Dashboard cannot load tips</p>
-              <p className="mt-1 opacity-90">{error}</p>
-            </div>
-          )}
-          {loading && <p className="text-slate-400">Loading…</p>}
-          {!loading && !dbDown && tips.length === 0 && (
-            <div className="rounded-lg border border-dashed border-slate-700 p-6 text-slate-400">
-              <p>No case cards yet.</p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link
-                  href="/intake"
-                  className="rounded-md border border-slate-600 px-3 py-1.5 text-sm text-sky-300 hover:border-sky-500"
-                >
-                  Submit via web intake
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => void loadDemoCards()}
-                  disabled={seeding}
-                  className="rounded-md bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700 disabled:opacity-50"
-                >
-                  {seeding ? "Loading demo…" : "Load demo case cards"}
-                </button>
-              </div>
-            </div>
-          )}
-          <ul className="space-y-3">
-            {tips.map((tip) => (
-              <li key={tip.id}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedId(tip.id)}
-                  className={`w-full rounded-lg border p-4 text-left transition ${
-                    selectedId === tip.id
-                      ? "border-sky-500 bg-slate-900"
-                      : "border-slate-800 bg-slate-900/50 hover:border-slate-600"
-                  }`}
-                >
-                  <p className="text-sm leading-relaxed">{tip.sanitized_summary}</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <DuressBadge level={tip.duress_signal} />
-                    {tip.distinct_channel_count > 1 && (
-                      <span className="rounded-full bg-sky-900/50 px-2 py-0.5 text-xs text-sky-300">
-                        {tip.distinct_channel_count} distinct channels report a similar claim
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">
-                    {new Date(tip.created_at).toLocaleString()}
-                  </p>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="ss-glass ss-status-panel">
+            <p className="ss-card-label">
+              <span className="ss-dot" aria-hidden="true" />
+              System path
+            </p>
+            <IntegrationStatusChips />
+          </div>
         </section>
 
-        <section>
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-slate-500">
-            Follow-up (safe-question filter)
-          </h2>
-          {!selected ? (
-            <p className="rounded-lg border border-dashed border-slate-700 p-6 text-slate-400">
-              Select a case card to preview or send a follow-up.
-            </p>
-          ) : (
-            <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
-              <p className="mb-4 text-sm text-slate-300">{selected.sanitized_summary}</p>
+        <section className="ss-wrap ss-metric-row" aria-label="Dashboard summary">
+          <div className="ss-metric">
+            <span>Cards</span>
+            <strong>{loading ? "--" : tips.length}</strong>
+          </div>
+          <div className="ss-metric">
+            <span>Corroborated</span>
+            <strong>{loading ? "--" : corroboratedCount}</strong>
+          </div>
+          <div className="ss-metric">
+            <span>High risk</span>
+            <strong>{loading ? "--" : highRiskCount}</strong>
+          </div>
+          <div className="ss-metric">
+            <span>Linq</span>
+            <strong>{linqLive ? "Live" : "Dry"}</strong>
+          </div>
+        </section>
 
-              {selected.next_safe_question && (
-                <div className="mb-4 rounded-md border border-sky-900/50 bg-sky-950/30 p-3">
-                  <p className="text-xs font-medium uppercase text-sky-400">
-                    Suggested follow-up (from intake)
-                  </p>
-                  <p className="mt-1 text-sm text-sky-100">{selected.next_safe_question}</p>
+        <section className="ss-wrap ss-desk-layout">
+          <div className="ss-desk-column">
+            <div className="ss-panel-heading">
+              <div>
+                <p className="ss-eyebrow">Case cards</p>
+                <h2>Sanitized intake queue</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => void loadDemoCards()}
+                disabled={seeding}
+                className="ss-btn ss-btn-ghost ss-small-btn"
+              >
+                {seeding ? "Loading..." : "Load demo"}
+              </button>
+            </div>
+
+            {error && (
+              <div className="ss-alert ss-alert-error">
+                <strong>Dashboard cannot load tips</strong>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {loading && <p className="ss-muted-line">Loading case cards...</p>}
+
+            {!loading && !dbDown && tips.length === 0 && (
+              <div className="ss-glass ss-empty-state">
+                <p>No case cards yet.</p>
+                <div className="ss-empty-actions">
+                  <Link href="/intake" className="ss-btn ss-btn-primary ss-small-btn">
+                    Submit via intake
+                  </Link>
                   <button
                     type="button"
-                    onClick={() => fillSuggestedQuestion(selected.next_safe_question!)}
-                    className="mt-2 text-xs text-sky-400 hover:text-sky-300"
+                    onClick={() => void loadDemoCards()}
+                    disabled={seeding}
+                    className="ss-btn ss-btn-ghost ss-small-btn"
                   >
-                    Use this question →
+                    {seeding ? "Loading..." : "Load demo cards"}
                   </button>
                 </div>
-              )}
+              </div>
+            )}
 
-              <form onSubmit={handleFollowUp} className="space-y-3">
-                <textarea
-                  value={followUp}
-                  onChange={(e) => setFollowUp(e.target.value)}
-                  placeholder='Try: "Did John Smith say this on March 3rd?" — regex + Krava rewrite.'
-                  rows={4}
-                  className="w-full rounded-md border border-slate-700 bg-slate-950 p-3 text-sm text-white placeholder:text-slate-600 focus:border-sky-500 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  disabled={sending || !followUp.trim()}
-                  className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
-                >
-                  {sending
-                    ? "Processing…"
-                    : linqLive
-                      ? "Send follow-up via iMessage"
-                      : "Preview rewrite (dry-run)"}
-                </button>
-              </form>
-
-              {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
-
-              {lastResult && (
-                <div className="mt-4 space-y-2 rounded-md border border-slate-700 bg-slate-950 p-3 text-sm">
-                  <p className="font-medium text-slate-300">
-                    {lastResult.dry_run
-                      ? "Dry-run — nothing sent to iMessage"
-                      : lastResult.wasRewritten
-                        ? "Rewritten before send"
-                        : "Sent as written"}
-                    {lastResult.via && (
-                      <span className="ml-2 text-xs text-slate-500">({lastResult.via})</span>
-                    )}
-                  </p>
-                  {lastResult.message && (
-                    <p className="text-xs text-amber-300/90">{lastResult.message}</p>
-                  )}
-                  <div>
-                    <p className="text-xs text-slate-500">Your draft</p>
-                    <p className="text-slate-400 line-through">{lastResult.original}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Source would receive</p>
-                    <p className="text-emerald-300">{lastResult.rewritten}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="mt-6 rounded-lg border border-amber-900/50 bg-amber-950/20 p-4 text-sm text-amber-200/80">
-            <p className="font-medium text-amber-200">Dashboard limits</p>
-            <ul className="mt-2 list-inside list-disc space-y-1 text-amber-200/70">
-              <li>No phone numbers, chat IDs, or raw transcripts shown</li>
-              <li>Similar-claim count is channel-based, not proof of independence</li>
-              <li>Coercion-risk flag is a model signal, not a determination</li>
+            <ul className="ss-case-list">
+              {tips.map((tip) => (
+                <li key={tip.id}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(tip.id)}
+                    className={`ss-case-card${selectedId === tip.id ? " ss-case-card-active" : ""}`}
+                  >
+                    <span className="ss-case-id">{tip.id.slice(0, 8)}</span>
+                    <p>{tip.sanitized_summary}</p>
+                    <div className="ss-case-meta">
+                      <DuressBadge level={tip.duress_signal} />
+                      {tip.distinct_channel_count > 1 && (
+                        <span className="ss-channel-chip">
+                          {tip.distinct_channel_count} distinct channels
+                        </span>
+                      )}
+                    </div>
+                    <time>{new Date(tip.created_at).toLocaleString()}</time>
+                  </button>
+                </li>
+              ))}
             </ul>
+          </div>
+
+          <aside className="ss-glass ss-followup-panel">
+            <p className="ss-card-label">
+              <span className="ss-dot" aria-hidden="true" />
+              Safe follow-up filter
+            </p>
+
+            {!selected ? (
+              <div className="ss-followup-empty">
+                <h2>Select a card.</h2>
+                <p>
+                  The source identity stays out of view. Pick a sanitized case to preview the
+                  question that would be sent back.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="ss-selected-card">
+                  <span className="ss-case-id">{selected.id.slice(0, 8)}</span>
+                  <p>{selected.sanitized_summary}</p>
+                  <DuressBadge level={selected.duress_signal} />
+                </div>
+
+                {selected.next_safe_question && (
+                  <div className="ss-suggested-question">
+                    <p>Suggested follow-up</p>
+                    <strong>{selected.next_safe_question}</strong>
+                    <button
+                      type="button"
+                      onClick={() => fillSuggestedQuestion(selected.next_safe_question!)}
+                    >
+                      Use this question
+                    </button>
+                  </div>
+                )}
+
+                <form onSubmit={handleFollowUp} className="ss-followup-form">
+                  <label htmlFor="follow-up">Draft a follow-up question</label>
+                  <textarea
+                    id="follow-up"
+                    value={followUp}
+                    onChange={(e) => setFollowUp(e.target.value)}
+                    placeholder="Try: Did the same manager approve the change?"
+                    rows={5}
+                  />
+                  <button
+                    type="submit"
+                    disabled={sending || !followUp.trim()}
+                    className="ss-btn ss-btn-primary"
+                  >
+                    {sending
+                      ? "Processing..."
+                      : linqLive
+                        ? "Send via iMessage"
+                        : "Preview safe rewrite"}
+                  </button>
+                </form>
+
+                {lastResult && (
+                  <div className="ss-rewrite-card">
+                    <p>
+                      {lastResult.dry_run
+                        ? "Dry run, nothing sent"
+                        : lastResult.wasRewritten
+                          ? "Rewritten before send"
+                          : "Sent as written"}
+                      {lastResult.via ? <span> ({lastResult.via})</span> : null}
+                    </p>
+                    {lastResult.message ? <small>{lastResult.message}</small> : null}
+                    <div>
+                      <span>Your draft</span>
+                      <del>{lastResult.original}</del>
+                    </div>
+                    <div>
+                      <span>Source would receive</span>
+                      <strong>{lastResult.rewritten}</strong>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </aside>
+        </section>
+
+        <section className="ss-wrap ss-dashboard-limits">
+          <div className="ss-limit">
+            <span>01</span>
+            <h3>Raw words stay sealed</h3>
+            <p>No phone numbers, chat IDs, or raw transcripts are shown on the journalist desk.</p>
+          </div>
+          <div className="ss-limit">
+            <span>02</span>
+            <h3>Signals are not proof</h3>
+            <p>Similar-claim counts and coercion-risk flags guide review; they do not verify facts.</p>
           </div>
         </section>
       </main>
-    </div>
+    </AppChrome>
   );
 }

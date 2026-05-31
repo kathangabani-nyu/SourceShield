@@ -105,9 +105,9 @@ export function IntakeClient({
     if (!activeCaseCode) return;
     try {
       await navigator.clipboard.writeText(activeCaseCode);
-      setCopyHint("Copied — other apps on this device may still read the clipboard.");
+      setCopyHint("Copied. Other apps on this device may still read the clipboard.");
     } catch {
-      setCopyHint("Copy failed — write the code down instead.");
+      setCopyHint("Copy failed. Write the code down instead.");
     }
   }
 
@@ -128,102 +128,136 @@ export function IntakeClient({
             SourceShield
           </Link>
           <div className="ss-navlinks">
-            <Link href="/limits">Honest limits</Link>
             <Link href="/dashboard">Dashboard</Link>
+            <Link href="/story">Demo story</Link>
+            <Link href="/limits">Honest limits</Link>
           </div>
         </nav>
 
         <main className="ss-intake-main">
-          <div className="ss-wrap" style={{ maxWidth: 720 }}>
-            <div className="ss-kicker">Anonymous web intake</div>
-            <h1 className="ss-section-title" style={{ marginTop: "1.25rem", fontSize: "2.75rem" }}>
-              Submit in confidence.
-            </h1>
-            <p className="ss-section-lede" style={{ marginTop: "1.25rem" }}>
-              No login, no phone, no browser-stored session. The newsroom database holds only
-              sanitized summaries — raw text is processed in Krava encrypted memory.
-            </p>
-
-            <aside className="ss-intake-callout">
-              <p>
-                <strong>Using Tor Browser?</strong> It hides your IP from SourceShield. An onion
-                mirror is the strongest path.
-                {onionUrl ? (
-                  <>
-                    {" "}
-                    <a href={onionUrl} className="ss-intake-link">
-                      Open .onion mirror
-                    </a>
-                  </>
-                ) : null}
+          <div className="ss-wrap ss-intake-shell">
+            <section className="ss-intake-copy">
+              <p className="ss-kicker">Anonymous web intake</p>
+              <h1 className="ss-section-title">Submit in confidence.</h1>
+              <p className="ss-section-lede">
+                No login, no phone, no browser-stored session. The newsroom database holds only
+                sanitized summaries; raw text is processed in Krava encrypted memory.
               </p>
-              <p>
-                <strong>Not using Tor?</strong> We log nothing intentionally, but your ISP or network
-                can see you reached this site. For network anonymity, open this page in Tor Browser.
-              </p>
-            </aside>
 
-            {activeCaseCode ? (
-              <div className="ss-case-panel" role="status">
-                <p className="ss-case-label">Your case code — write this down</p>
-                <p className="ss-case-code">{activeCaseCode}</p>
-                <p className="ss-case-warn">
-                  This is the only way to resume your thread. We cannot recover it if you lose it.
+              <div className="ss-intake-route-map" aria-label="Privacy pipeline">
+                <div>
+                  <span>01</span>
+                  <strong>Source sends</strong>
+                  <p>Plain text enters over the anonymous web path.</p>
+                </div>
+                <div>
+                  <span>02</span>
+                  <strong>Krava seals</strong>
+                  <p>Raw words stay in encrypted memory for source-held continuity.</p>
+                </div>
+                <div>
+                  <span>03</span>
+                  <strong>Desk sees safe</strong>
+                  <p>Journalists receive a sanitized card, never the original transcript.</p>
+                </div>
+              </div>
+
+              <aside className="ss-intake-callout">
+                <p>
+                  <strong>Using Tor Browser?</strong> It hides your IP from SourceShield. An onion
+                  mirror is the strongest path.
+                  {onionUrl ? (
+                    <>
+                      {" "}
+                      <a href={onionUrl} className="ss-intake-link">
+                        Open onion mirror
+                      </a>
+                    </>
+                  ) : null}
                 </p>
-                <button type="button" className="ss-btn ss-btn-ghost ss-case-copy" onClick={copyCaseCode}>
-                  Copy to clipboard (optional)
-                </button>
-                {copyHint ? <p className="ss-case-hint">{copyHint}</p> : null}
-                {(result?.memory_recalled || urlRecalled) && (
-                  <p className="ss-case-hint">Prior context recalled from Krava memory.</p>
-                )}
-              </div>
-            ) : null}
+                <p>
+                  <strong>Not using Tor?</strong> We log nothing intentionally, but your ISP or
+                  network can see you reached this site. For network anonymity, open this page in Tor
+                  Browser.
+                </p>
+              </aside>
+            </section>
 
-            <div className="ss-intake-resume">
-              <label htmlFor="resume-case">Resume a thread</label>
-              <div className="ss-intake-resume-row">
-                <input
-                  id="resume-case"
-                  type="text"
-                  value={resumeInput}
-                  onChange={(event) => setResumeInput(event.target.value)}
-                  placeholder="Paste your case code"
-                  spellCheck={false}
-                  autoComplete="off"
-                />
-                <button type="button" className="ss-btn ss-btn-ghost" onClick={applyResume}>
-                  Use code
-                </button>
+            <section className="ss-glass ss-intake-composer" aria-label="Submit a tip">
+              <div className="ss-intake-card-head">
+                <span className="ss-source-id">
+                  <span className="ss-dot" aria-hidden="true" />
+                  Anonymous web session
+                </span>
+                <span className="ss-mono-note">Encrypted in transit</span>
               </div>
-              {resumeError ? <p className="ss-intake-error">{resumeError}</p> : null}
-              {sessionId && !activeCaseCode ? (
-                <p className="ss-case-hint">Case code set for your next submit.</p>
+
+              {activeCaseCode ? (
+                <div className="ss-case-panel" role="status">
+                  <p className="ss-case-label">Your case code - write this down</p>
+                  <p className="ss-case-code">{activeCaseCode}</p>
+                  <p className="ss-case-warn">
+                    This is the only way to resume your thread. We cannot recover it if you lose it.
+                  </p>
+                  <button
+                    type="button"
+                    className="ss-btn ss-btn-ghost ss-case-copy"
+                    onClick={copyCaseCode}
+                  >
+                    Copy to clipboard
+                  </button>
+                  {copyHint ? <p className="ss-case-hint">{copyHint}</p> : null}
+                  {(result?.memory_recalled || urlRecalled) && (
+                    <p className="ss-case-hint">Prior context recalled from Krava memory.</p>
+                  )}
+                </div>
               ) : null}
-            </div>
 
-            <form onSubmit={handleSubmit} className="ss-intake-form">
-              <label htmlFor="tip-text">What do you need to report?</label>
-              <textarea
-                id="tip-text"
-                value={text}
-                onChange={(event) => setText(event.target.value)}
-                placeholder='Example: "On March 15th contracts were backdated to avoid an audit window…"'
-                rows={6}
-              />
-              <button
-                type="submit"
-                disabled={loading || !text.trim()}
-                className="ss-btn ss-btn-primary"
-              >
-                {loading ? "Processing…" : "Send in confidence"}
-              </button>
-            </form>
+              <div className="ss-intake-resume">
+                <label htmlFor="resume-case">Resume a thread</label>
+                <div className="ss-intake-resume-row">
+                  <input
+                    id="resume-case"
+                    type="text"
+                    value={resumeInput}
+                    onChange={(event) => setResumeInput(event.target.value)}
+                    placeholder="Paste your case code"
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                  <button type="button" className="ss-btn ss-btn-ghost" onClick={applyResume}>
+                    Use code
+                  </button>
+                </div>
+                {resumeError ? <p className="ss-intake-error">{resumeError}</p> : null}
+                {sessionId && !activeCaseCode ? (
+                  <p className="ss-case-hint">Case code set for your next submit.</p>
+                ) : null}
+              </div>
 
-            {error ? <p className="ss-intake-error">{error}</p> : null}
+              <form onSubmit={handleSubmit} className="ss-intake-form">
+                <label htmlFor="tip-text">What do you need to report?</label>
+                <textarea
+                  id="tip-text"
+                  value={text}
+                  onChange={(event) => setText(event.target.value)}
+                  placeholder="Example: On March 15, contracts were backdated to avoid an audit window..."
+                  rows={7}
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !text.trim()}
+                  className="ss-btn ss-btn-primary"
+                >
+                  {loading ? "Processing..." : "Send in confidence"}
+                </button>
+              </form>
+
+              {error ? <p className="ss-intake-error">{error}</p> : null}
+            </section>
 
             {result && submittedRaw ? (
-              <div className="ss-intake-results">
+              <section className="ss-intake-results">
                 {result.warnings?.map((warning) => (
                   <p key={warning} className="ss-intake-warn">
                     {warning}
@@ -234,24 +268,24 @@ export function IntakeClient({
                   <div className="ss-glass ss-intake-panel ss-intake-panel-raw">
                     <p className="ss-card-label">
                       <span className="ss-dot" aria-hidden="true" />
-                      Raw (Krava encrypted memory only)
+                      Raw - Krava encrypted memory only
                     </p>
                     <p className="ss-tip-text">{submittedRaw}</p>
                     <p className="ss-card-caption">
                       {result.memory_saved
                         ? "Saved to Krava memory"
                         : "Memory save skipped or unavailable"}
-                      {result.memory_recalled ? " · prior context recalled" : ""}
+                      {result.memory_recalled ? " - prior context recalled" : ""}
                     </p>
                   </div>
                   <div className="ss-glass ss-intake-panel">
                     <p className="ss-card-label">
                       <span className="ss-dot" aria-hidden="true" />
-                      Sanitized (newsroom database)
+                      Sanitized - newsroom database
                     </p>
                     <p className="ss-tip-text">{result.sanitized_summary}</p>
                     <p className="ss-card-caption">
-                      Engine: {result.engine === "krava" ? "Krava LLM" : "Mock"} · Duress:{" "}
+                      Engine: {result.engine === "krava" ? "Krava LLM" : "Mock"} - Duress:{" "}
                       {result.duress_signal}
                     </p>
                   </div>
@@ -267,14 +301,14 @@ export function IntakeClient({
                 ) : null}
                 {result.db_saved && result.tip_id ? (
                   <p className="ss-case-hint">
-                    Card saved — open{" "}
+                    Card saved. Open{" "}
                     <Link href="/dashboard" className="ss-intake-link">
                       dashboard
                     </Link>{" "}
                     to send a safe follow-up.
                   </p>
                 ) : null}
-              </div>
+              </section>
             ) : null}
           </div>
         </main>
