@@ -23,9 +23,14 @@ const beats = [
 
 const limits = [
   {
-    tag: "The boundary",
-    title: "Anonymous web intake still has edges.",
-    body: "Without Linq follow-up, SourceShield does not ask for a phone number or identity. Browser, hosting, and network metadata can still exist outside the app.",
+    tag: "Web intake",
+    title: "Anonymous at the application layer.",
+    body: "No login, no phone, no browser-stored session, no analytics, no third-party requests — and no raw text in the newsroom database. Raw transcripts may live in Krava encrypted memory; network anonymity is Tor's job.",
+  },
+  {
+    tag: "iMessage path",
+    title: "Pseudonymous, not invisible.",
+    body: "Two-way follow-up over Linq keeps the thread alive without exposing identity in the newsroom — but carriers and Apple still see phone metadata.",
   },
   {
     tag: "The signal",
@@ -111,13 +116,14 @@ export default function HomePage() {
         </nav>
 
         <header className="ss-hero">
-          <div className="ss-kicker ss-reveal ss-in">Pseudonymous source protection</div>
+          <div className="ss-kicker ss-reveal ss-in">Anonymous web · pseudonymous iMessage</div>
           <h1 className="ss-title ss-reveal ss-in ss-d1">
-            Truth, <em>without a trace.</em>
+            Truth, <em>sanitized before the desk.</em>
           </h1>
           <p className="ss-lede ss-reveal ss-in ss-d2">
-            Newsroom tips travel through encrypted light. Raw words stay sealed in private memory;
-            journalists receive only what is safe to know.
+            Anonymous web intake at the application layer — no login, no phone, no browser session, no
+            analytics, no third-party requests, and no raw text in the newsroom database. For network
+            anonymity, use Tor Browser.
           </p>
           <div className="ss-cta-row ss-reveal ss-in ss-d3">
             <Link href="/intake" className="ss-btn ss-btn-primary">

@@ -16,6 +16,13 @@ export function getAppUrl(): string {
   return "http://localhost:3000";
 }
 
+/** Optional .onion mirror for Tor-first sources (set NEXT_PUBLIC_ONION_URL in deploy). */
+export function getOnionUrl(): string | null {
+  const raw = process.env.NEXT_PUBLIC_ONION_URL?.trim();
+  if (!raw) return null;
+  return raw.replace(/\/$/, "");
+}
+
 /** Awaitable worker trigger — use with waitUntil() on Vercel so the fetch completes. */
 export async function triggerWorker(payload: WorkerPayload): Promise<void> {
   const secret = process.env.INTERNAL_WORKER_SECRET;

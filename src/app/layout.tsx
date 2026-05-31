@@ -27,9 +27,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SourceShield - Truth without a trace",
+  title: "SourceShield — anonymous web intake, pseudonymous iMessage",
   description:
-    "Live two-way pseudonymous follow-up over Linq iMessage with Krava private inference and encrypted memory.",
+    "Anonymous web intake at the application layer; pseudonymous two-way follow-up over Linq iMessage with Krava private inference.",
 };
 
 export default function RootLayout({

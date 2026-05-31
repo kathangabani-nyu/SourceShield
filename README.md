@@ -18,7 +18,7 @@ SourceShield sits in the middle: **private intake and memory on Krava**, **live 
 
 1. **[Web intake](https://source-shield.vercel.app/intake)** — Submit a tip with a name, date, and dollar amount. The UI shows **raw (Krava-only)** vs **sanitized (dashboard/Postgres)** side by side.
 2. **[Dashboard](https://source-shield.vercel.app/dashboard)** — Select the card. Type an unsafe follow-up (*“Did John Smith say this on March 3rd?”*). Watch it **rewrite** before send (dry-run without Linq; live send with Linq).
-3. **Return in the same browser** — Submit again; Krava memory can **recall prior context** (when the Krava key is live).
+3. **Resume with your case code** — Submit again using the case code from step 1; Krava memory can **recall prior context** (when the Krava key is live). No browser-stored session.
 
 The landing page **system status chips** probe Krava and Supabase in real time — degraded mode is visible, not hidden behind “No tips yet.”
 
@@ -131,7 +131,7 @@ npm run dev
 | Route | Purpose |
 |-------|---------|
 | `/` | Overview + live integration status |
-| `/intake` | Web tip path (session continuity via `localStorage`) |
+| `/intake` | Web tip path (case-code continuity — no browser session) |
 | `/dashboard` | Journalist case cards + safe follow-up |
 | `/limits` | Full “what we do not claim” |
 | `/api/health` | Probes Krava + Supabase (JSON) |
@@ -155,6 +155,7 @@ Server-only secrets must **never** use the `NEXT_PUBLIC_` prefix.
 | `INTERNAL_WORKER_SECRET` | Production | Protects `/api/linq/process`, `/api/seed`; webhook→worker auth |
 | `DASHBOARD_SECRET` | Production | Protects `/api/tips` and follow-up; unlock UI stores in `sessionStorage` |
 | `NEXT_PUBLIC_APP_URL` | Deploy | Production URL (e.g. `https://source-shield.vercel.app`) — not `localhost` on Vercel |
+| `NEXT_PUBLIC_ONION_URL` | Optional | `.onion` mirror URL shown on `/intake` for Tor-first sources |
 
 Generate secrets (PowerShell):
 
@@ -256,6 +257,7 @@ docs/             # Setup, API verification, rehearsal, free tier
 - [Supabase setup](docs/supabase-setup.md) — project `bsarszpxxsntohgazmsy`
 - [API verification (Task Zero)](docs/api-verification.md) — Linq + Krava shapes
 - [Demo rehearsal](docs/demo-rehearsal.md) — 2‑minute talk track
+- [Web intake anonymity](docs/anonymity.md) — threat model, Tor, case codes, CSP
 - [Free tier / $0 runbook](docs/free-tier.md)
 - [Design decisions](DECISIONS.md)
 
@@ -266,7 +268,7 @@ docs/             # Setup, API verification, rehearsal, free tier
 - **Pseudonymous ≠ anonymous** — metadata exists outside our DB.
 - **Similar claim ≠ independent corroboration** — channel count is a signal, not proof.
 - **Coercion flag** — model signal; bot pauses neutrally, never asks “Are you being forced?”
-- **Web path** — browser session continuity, not hardware passkeys.
+- **Web path** — case-code continuity (no `localStorage`); see [anonymity model](docs/anonymity.md).
 
 [Full limits →](/limits) (or [live](https://source-shield.vercel.app/limits))
 

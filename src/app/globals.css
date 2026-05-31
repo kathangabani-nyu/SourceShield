@@ -895,3 +895,221 @@ body {
     transition: none !important;
   }
 }
+
+/* ---- intake page (matches home design system) ---- */
+.ss-intake-main {
+  padding: 3rem 0 6rem;
+}
+
+.ss-intake-callout {
+  margin-top: 2rem;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid var(--ss-line);
+  border-radius: 1rem;
+  background: oklch(0.16 0.024 258 / 0.45);
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--ss-ink-soft);
+}
+
+.ss-intake-callout p {
+  margin: 0 0 0.75rem;
+}
+
+.ss-intake-callout p:last-child {
+  margin-bottom: 0;
+}
+
+.ss-intake-callout strong {
+  color: var(--ss-ink);
+  font-weight: 400;
+}
+
+.ss-intake-link {
+  color: var(--ss-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ss-case-panel {
+  margin-top: 2rem;
+  padding: 1.75rem 1.5rem;
+  border: 1px solid oklch(0.78 0.12 256 / 0.45);
+  border-radius: 1.125rem;
+  background: oklch(0.78 0.13 256 / 0.08);
+  text-align: center;
+}
+
+.ss-case-label {
+  margin: 0;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ss-accent);
+}
+
+.ss-case-code {
+  margin: 1rem 0 0.75rem;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.95rem;
+  word-break: break-all;
+  color: var(--ss-ink);
+}
+
+.ss-case-warn {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ss-ink-soft);
+}
+
+.ss-case-copy {
+  margin-top: 1.25rem;
+}
+
+.ss-case-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: var(--ss-ink-faint);
+}
+
+.ss-intake-resume {
+  margin-top: 2rem;
+}
+
+.ss-intake-resume label {
+  display: block;
+  margin-bottom: 0.65rem;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ss-ink-faint);
+}
+
+.ss-intake-resume-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ss-intake-resume-row input {
+  flex: 1;
+  min-width: 14rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--ss-line);
+  border-radius: 0.75rem;
+  background: oklch(0.17 0.025 260 / 0.55);
+  color: var(--ss-ink);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+}
+
+.ss-intake-resume-row input:focus {
+  outline: none;
+  border-color: oklch(0.78 0.12 256 / 0.55);
+  box-shadow: 0 0 0 3px oklch(0.78 0.13 256 / 0.1);
+}
+
+.ss-intake-form {
+  margin-top: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ss-intake-form label {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--ss-ink-soft);
+}
+
+.ss-intake-form textarea {
+  width: 100%;
+  min-height: 9rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--ss-line);
+  border-radius: 0.875rem;
+  background: oklch(0.17 0.025 260 / 0.55);
+  color: var(--ss-ink);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  resize: vertical;
+}
+
+.ss-intake-form textarea:focus {
+  outline: none;
+  border-color: oklch(0.78 0.12 256 / 0.55);
+}
+
+.ss-intake-error {
+  margin-top: 1rem;
+  color: oklch(0.75 0.12 25);
+  font-size: 0.9375rem;
+}
+
+.ss-intake-warn {
+  padding: 0.75rem 1rem;
+  border-radius: 0.625rem;
+  border: 1px solid oklch(0.7 0.1 45 / 0.4);
+  background: oklch(0.55 0.08 45 / 0.15);
+  color: oklch(0.9 0.04 80);
+  font-size: 0.875rem;
+}
+
+.ss-intake-results {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ss-intake-panels {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 720px) {
+  .ss-intake-panels {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ss-intake-panel {
+  text-align: left;
+}
+
+.ss-intake-panel-raw {
+  border-color: oklch(0.55 0.08 25 / 0.35);
+}
+
+.ss-intake-reply {
+  text-align: left;
+}
+
+.ss-noscript-intake {
+  min-height: 100vh;
+  background: var(--ss-bg-deep);
+  color: var(--ss-ink);
+}
+
+.ss-noscript-intake form {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ss-noscript-intake textarea,
+.ss-noscript-intake input[type="text"] {
+  width: 100%;
+  padding: 0.75rem;
+  background: oklch(0.17 0.025 260 / 0.55);
+  color: var(--ss-ink);
+  border: 1px solid var(--ss-line);
+  border-radius: 0.5rem;
+}
+

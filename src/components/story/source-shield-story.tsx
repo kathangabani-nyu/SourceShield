@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { SEED_DEMO_TIPS, type DemoTip } from "@/lib/story-demo";
+import { StoryDashboardScene } from "@/components/story/story-dashboard-scene";
+import { StoryIntakeScene } from "@/components/story/story-intake-scene";
 
 const SCENES = [
   { id: "s-open", title: "Open" },
@@ -13,9 +16,13 @@ const SCENES = [
   { id: "s-llm", title: "PrivateLLM" },
   { id: "s-router", title: "Inference Router" },
   { id: "s-app", title: "Our app" },
+  { id: "s-intake", title: "Submit a tip" },
+  { id: "s-dash", title: "Journalist's desk" },
   { id: "s-linq", title: "Linq · iMessage" },
   { id: "s-why", title: "Why it wins" },
 ] as const;
+
+const DASHBOARD_SCENE_INDEX = SCENES.findIndex((scene) => scene.id === "s-dash");
 
 const CONSTELLATION_STARS = [
   { name: "Krava depth", sub: "four primitives, used" },
@@ -71,6 +78,7 @@ export function SourceShieldStory() {
   const [phaseTense, setPhaseTense] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [hintHidden, setHintHidden] = useState(false);
+  const [demoTips, setDemoTips] = useState<DemoTip[]>(SEED_DEMO_TIPS);
 
   const scrollToScene = useCallback((index: number) => {
     const deck = deckRef.current;
@@ -328,10 +336,10 @@ export function SourceShieldStory() {
             <div className="openmark anim" aria-hidden="true" />
             <div className="kicker lines anim d1">Krava × Linq · Privacy-First AI</div>
             <h1 className="display anim d2" style={{ marginTop: 26 }}>
-              Truth, <em>without a trace.</em>
+              Truth, <em>sanitized before the desk.</em>
             </h1>
             <p className="lede anim d3">
-              SourceShield — a privacy story told in nine quiet scenes. Scroll, and let it unfold.
+              SourceShield — a privacy story in thirteen quiet scenes. Scroll, and let it unfold.
             </p>
           </div>
           <div
@@ -703,7 +711,20 @@ export function SourceShieldStory() {
           </div>
         </section>
 
-        <section className="scene" id="s-linq" ref={setSceneRef(9)} aria-label="Linq integration">
+        <StoryIntakeScene
+          sceneRef={setSceneRef(9)}
+          tipCount={demoTips.length}
+          onSubmit={(tip) => setDemoTips((tips) => [tip, ...tips])}
+          onScrollToDashboard={() => scrollToScene(DASHBOARD_SCENE_INDEX)}
+        />
+
+        <StoryDashboardScene
+          sceneRef={setSceneRef(10)}
+          tips={demoTips}
+          active={current === DASHBOARD_SCENE_INDEX}
+        />
+
+        <section className="scene" id="s-linq" ref={setSceneRef(11)} aria-label="Linq integration">
           <div className="scene-inner split">
             <div className="visual anim d2">
               <div className="thread glass">
@@ -739,7 +760,7 @@ export function SourceShieldStory() {
           </div>
         </section>
 
-        <section className="scene" id="s-why" ref={setSceneRef(10)} aria-label="Why it wins">
+        <section className="scene" id="s-why" ref={setSceneRef(12)} aria-label="Why it wins">
           <div className="scene-inner">
             <div className="kicker lines anim">Why this wins</div>
             <h2 className="display anim d1" style={{ marginTop: 20 }}>
