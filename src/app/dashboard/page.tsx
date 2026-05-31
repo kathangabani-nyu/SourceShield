@@ -209,6 +209,10 @@ export default function DashboardPage() {
               Enter the dashboard secret from your environment. It is stored in this browser session
               only.
             </p>
+            <p className="ss-tech-note">
+              Bearer DASHBOARD_SECRET → sessionStorage · gates GET /api/tips in production · separate
+              from INTERNAL_WORKER_SECRET.
+            </p>
             <label htmlFor="dashboard-secret">Dashboard secret</label>
             <input
               id="dashboard-secret"
@@ -248,6 +252,10 @@ export default function DashboardPage() {
               Review sanitized case cards, keep raw transcripts out of the newsroom database, and
               rewrite follow-ups before they reach a source.
             </p>
+            <p className="ss-tech-note">
+              Service-role API only · no linq_chat_id or raw text in responses · follow-ups rewritten
+              via Krava before Linq send.
+            </p>
           </div>
           <div className="ss-glass ss-status-panel">
             <p className="ss-card-label">
@@ -283,6 +291,10 @@ export default function DashboardPage() {
               <div>
                 <p className="ss-eyebrow">Case cards</p>
                 <h2>Sanitized intake queue</h2>
+                <p className="ss-tech-note">
+                  Postgres tips: sanitized_summary, duress_signal, claim_fingerprint — SHA-256 handles
+                  never surfaced here.
+                </p>
               </div>
               <button
                 type="button"
@@ -360,6 +372,10 @@ export default function DashboardPage() {
                   The source identity stays out of view. Pick a sanitized case to preview the
                   question that would be sent back.
                 </p>
+                <p className="ss-tech-note">
+                  Regex strip + optional Krava rewrite · unsafe names/dates removed before iMessage
+                  outbound.
+                </p>
               </div>
             ) : (
               <>
@@ -435,11 +451,18 @@ export default function DashboardPage() {
             <span>01</span>
             <h3>Raw words stay sealed</h3>
             <p>No phone numbers, chat IDs, or raw transcripts are shown on the journalist desk.</p>
+            <p className="ss-tech-note">
+              Raw text in Krava AES-256-GCM memory · dashboard reads sanitized rows via service role
+              only.
+            </p>
           </div>
           <div className="ss-limit">
             <span>02</span>
             <h3>Signals are not proof</h3>
             <p>Similar-claim counts and coercion-risk flags guide review; they do not verify facts.</p>
+            <p className="ss-tech-note">
+              claim_fingerprint grouping · LLM duress_signal enum — not forensic evidence.
+            </p>
           </div>
         </section>
       </main>

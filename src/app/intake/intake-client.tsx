@@ -143,22 +143,32 @@ export function IntakeClient({
                 No login, no phone, no browser-stored session. The newsroom database holds only
                 sanitized summaries; raw text is processed in Krava encrypted memory.
               </p>
+              <p className="ss-tech-note">
+                POST /api/intake/web · TLS · Cache-Control: no-store · no analytics pixels.
+              </p>
 
               <div className="ss-intake-route-map" aria-label="Privacy pipeline">
                 <div>
                   <span>01</span>
                   <strong>Source sends</strong>
                   <p>Plain text enters over the anonymous web path.</p>
+                  <p className="ss-tech-note">HTTPS · no cookies · no localStorage session.</p>
                 </div>
                 <div>
                   <span>02</span>
                   <strong>Krava seals</strong>
                   <p>Raw words stay in encrypted memory for source-held continuity.</p>
+                  <p className="ss-tech-note">
+                    memory.save · AES-256-GCM · per-source userToken from users.getOrCreate.
+                  </p>
                 </div>
                 <div>
                   <span>03</span>
                   <strong>Desk sees safe</strong>
                   <p>Journalists receive a sanitized card, never the original transcript.</p>
+                  <p className="ss-tech-note">
+                    Supabase tips row: summary + duress + claim_fingerprint only.
+                  </p>
                 </div>
               </div>
 
@@ -189,7 +199,7 @@ export function IntakeClient({
                   <span className="ss-dot" aria-hidden="true" />
                   Anonymous web session
                 </span>
-                <span className="ss-mono-note">Encrypted in transit</span>
+                <span className="ss-mono-note">TLS 1.3 in transit</span>
               </div>
 
               {activeCaseCode ? (
@@ -198,6 +208,10 @@ export function IntakeClient({
                   <p className="ss-case-code">{activeCaseCode}</p>
                   <p className="ss-case-warn">
                     This is the only way to resume your thread. We cannot recover it if you lose it.
+                  </p>
+                  <p className="ss-tech-note">
+                    UUIDv4 case code · server maps SHA-256(web:uuid) — never stores the code as a
+                    lookup column.
                   </p>
                   <button
                     type="button"
@@ -277,6 +291,10 @@ export function IntakeClient({
                         : "Memory save skipped or unavailable"}
                       {result.memory_recalled ? " - prior context recalled" : ""}
                     </p>
+                    <p className="ss-tech-note">
+                      AES-256-GCM ciphertext · decryption scoped to this source&apos;s Krava
+                      userToken — not in Postgres.
+                    </p>
                   </div>
                   <div className="ss-glass ss-intake-panel">
                     <p className="ss-card-label">
@@ -287,6 +305,11 @@ export function IntakeClient({
                     <p className="ss-card-caption">
                       Engine: {result.engine === "krava" ? "Krava LLM" : "Mock"} - Duress:{" "}
                       {result.duress_signal}
+                    </p>
+                    <p className="ss-tech-note">
+                      {result.engine === "krava"
+                        ? "kimi-k2-5 agentChat · TEE inference · JSON schema validated server-side."
+                        : "Regex mock fallback when Krava key unavailable — same UI, heuristic strip."}
                     </p>
                   </div>
                 </div>

@@ -8,16 +8,19 @@ const beats = [
     num: "01",
     title: "Sealed at the source",
     body: "Raw transcripts live only inside encrypted memory. They are never stored in the open, never logged for the dashboard, and never treated as newsroom copy.",
+    tech: "Krava memory.save · AES-256-GCM (authenticated encryption) · scoped per pseudonymous userToken — chosen for tamper detection + industry-standard at-rest sealing.",
   },
   {
     num: "02",
     title: "Sanitized on arrival",
     body: "Names, dates, numbers, and places soften into safe tokens before a journalist reads a word. Context remains; identity recedes.",
+    tech: "kimi-k2-5 via Krava agentChat inside a TEE · structured JSON intake · only sanitized_summary lands in Postgres.",
   },
   {
     num: "03",
     title: "A thread that stays open",
     body: "Pseudonymous two-way follow-up keeps the conversation alive over iMessage without exposing who is on the other end.",
+    tech: "Linq outbound · idempotency_key per message · sender handle hashed SHA-256 before any DB write.",
   },
 ];
 
@@ -26,16 +29,19 @@ const limits = [
     tag: "Web intake",
     title: "Anonymous at the application layer.",
     body: "No login, no phone, no browser-stored session, no analytics, no third-party requests — and no raw text in the newsroom database. Raw transcripts may live in Krava encrypted memory; network anonymity is Tor's job.",
+    tech: "TLS 1.3 in transit · case code UUIDv4 (user-held) · channel keyed SHA-256(web:uuid).",
   },
   {
     tag: "iMessage path",
     title: "Pseudonymous, not invisible.",
     body: "Two-way follow-up over Linq keeps the thread alive without exposing identity in the newsroom — but carriers and Apple still see phone metadata.",
+    tech: "Webhook verified HMAC-SHA256 · chat_id server-only · dashboard API strips phone fields.",
   },
   {
     tag: "The signal",
     title: "A similar claim is a lead, not proof.",
     body: "When separate channels echo the same story, SourceShield surfaces it as a signal worth chasing, never as independent corroboration.",
+    tech: "claim_fingerprint slug from LLM · grouped in Postgres — no raw text compared.",
   },
 ];
 
@@ -140,6 +146,9 @@ export default function HomePage() {
           <div className="ss-hero-status ss-reveal ss-in ss-d4">
             <span className="ss-pulse" aria-hidden="true" />
             Encrypted memory online - channel secured
+            <span className="ss-tech-note">
+              AES-256-GCM at rest · TLS in transit · SHA-256 channel hashes
+            </span>
           </div>
         </header>
 
@@ -205,6 +214,10 @@ export default function HomePage() {
                 The raw transcript never leaves encrypted memory. The dashboard only ever holds the
                 sanitized version.
               </p>
+              <p className="ss-tech-note ss-card-caption">
+                Split-storage: Krava ciphertext vs. Postgres sanitized_summary only — anon RLS blocks
+                direct tip reads from the browser.
+              </p>
             </div>
           </div>
         </section>
@@ -221,6 +234,9 @@ export default function HomePage() {
                   <div className="ss-num">{beat.num}</div>
                   <h3>{beat.title}</h3>
                   <p>{beat.body}</p>
+                  {"tech" in beat && beat.tech ? (
+                    <p className="ss-tech-note">{beat.tech}</p>
+                  ) : null}
                 </article>
               ))}
             </div>
@@ -242,6 +258,9 @@ export default function HomePage() {
                   <span>{limit.tag}</span>
                   <h3>{limit.title}</h3>
                   <p>{limit.body}</p>
+                  {"tech" in limit && limit.tech ? (
+                    <p className="ss-tech-note">{limit.tech}</p>
+                  ) : null}
                 </article>
               ))}
             </div>

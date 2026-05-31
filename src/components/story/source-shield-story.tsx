@@ -487,6 +487,9 @@ export function SourceShieldStory() {
                 Every source gets a pseudonymous Krava identity. Journalists never see who&apos;s
                 behind a tip.
               </GuaranteeUse>
+              <p className="tech-note">
+                users.getOrCreate(source:SHA-256) · per-source userToken · no PII in dashboard API.
+              </p>
             </div>
           </div>
         </section>
@@ -556,6 +559,10 @@ export function SourceShieldStory() {
                 Raw transcripts live only in Krava encrypted memory. Our own database holds
                 sanitized summaries — never the original words.
               </GuaranteeUse>
+              <p className="tech-note">
+                AES-256-GCM: 256-bit key, Galois/Counter Mode adds an auth tag so tampered ciphertext
+                fails decrypt — standard choice when plaintext must stay confidential and verifiable.
+              </p>
             </div>
           </div>
         </section>
@@ -591,6 +598,9 @@ export function SourceShieldStory() {
                 Every tip is sanitized — and every journalist&apos;s follow-up rewritten safe —
                 inside Krava&apos;s private inference.
               </GuaranteeUse>
+              <p className="tech-note">
+                kimi-k2-5 agentChat · TEE boundary · operator-blind inference (SOC 2 Type II infra).
+              </p>
             </div>
           </div>
         </section>
@@ -636,6 +646,9 @@ export function SourceShieldStory() {
                 Sanitization and follow-up inference are routed through Krava&apos;s private enclave
                 path so sensitive text is handled inside the private inference boundary.
               </GuaranteeUse>
+              <p className="tech-note">
+                agent.getGatewayCredentials → lowest-exposure enclave path selected per request.
+              </p>
             </div>
           </div>
         </section>
@@ -661,6 +674,7 @@ export function SourceShieldStory() {
                 <h4>Source sends</h4>
                 <p>A tip arrives over iMessage or the web.</p>
                 <span className="gtag">PasskeyID</span>
+                <span className="tech-note">TLS · HMAC webhook · SHA-256 handle</span>
               </div>
               <div className="fstep">
                 <div className="icon">
@@ -669,6 +683,7 @@ export function SourceShieldStory() {
                 <h4>Sealed in memory</h4>
                 <p>Raw words encrypted into Krava memory.</p>
                 <span className="gtag">Secure Memory</span>
+                <span className="tech-note">AES-256-GCM · memory.save</span>
               </div>
               <div className="fstep">
                 <div className="icon">
@@ -677,6 +692,7 @@ export function SourceShieldStory() {
                 <h4>Sanitized</h4>
                 <p>Names, dates &amp; places become safe tokens.</p>
                 <span className="gtag">PrivateLLM</span>
+                <span className="tech-note">kimi-k2-5 · TEE</span>
               </div>
               <div className="fstep">
                 <div className="icon">
@@ -685,6 +701,7 @@ export function SourceShieldStory() {
                 <h4>Routed &amp; returned</h4>
                 <p>Only the sanitized summary reaches the desk.</p>
                 <span className="gtag">Inference Router</span>
+                <span className="tech-note">Postgres summary only</span>
               </div>
             </div>
           </div>

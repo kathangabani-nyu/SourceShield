@@ -37,6 +37,31 @@
   color: var(--ink-faint);
 }
 
+.source-shield-story .tech-note {
+  display: block;
+  max-width: 48ch;
+  margin-top: 0.65em;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  line-height: 1.55;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  overflow-wrap: anywhere;
+}
+
+.source-shield-story .uses + .tech-note {
+  margin-top: 1rem;
+}
+
+.source-shield-story .fstep .tech-note {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  max-width: 14ch;
+  text-transform: none;
+}
+
 .source-shield-story .btn {
   font-family: var(--mono);
   font-size: 12.5px;
@@ -262,9 +287,19 @@
   text-transform: uppercase;
   color: var(--ink-faint);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   transition: color 0.6s ease;
+}
+
+.source-shield-story .proc-step .tech-note {
+  flex-basis: 100%;
+  margin: -4px 0 0 26px;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: none;
+  text-align: left;
 }
 
 .source-shield-story .proc-step.done {

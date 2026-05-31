@@ -9,9 +9,9 @@ import {
 } from "@/lib/story-demo";
 
 const PROC_STEPS = [
-  "Encrypting to Krava memory",
-  "Sanitizing with PrivateLLM",
-  "Sealing — key stays with source",
+  { label: "Encrypting to Krava memory", tech: "AES-256-GCM · memory.save" },
+  { label: "Sanitizing with PrivateLLM", tech: "kimi-k2-5 · agentChat" },
+  { label: "Sealing — key stays with source", tech: "userToken-scoped decrypt" },
 ];
 
 type CardPhase = "idle" | "processing" | "success";
@@ -75,7 +75,7 @@ export function StoryIntakeScene({
                 <span className="dot" aria-hidden="true" />
                 Anonymous web session
               </span>
-              <span className="mono-label">Encrypted in transit</span>
+              <span className="mono-label">TLS 1.3 in transit</span>
             </div>
 
             <form className="intake-body" onSubmit={handleSubmit}>
@@ -118,13 +118,14 @@ export function StoryIntakeScene({
                 <div className="proc-dot" />
               </div>
               <div className="proc-steps">
-                {PROC_STEPS.map((label, index) => (
+                {PROC_STEPS.map((step, index) => (
                   <div
-                    key={label}
+                    key={step.label}
                     className={`proc-step${index < stepsDone ? " done" : ""}`}
                   >
                     <span className="check" />
-                    {label}
+                    {step.label}
+                    <span className="tech-note">{step.tech}</span>
                   </div>
                 ))}
               </div>
@@ -137,6 +138,10 @@ export function StoryIntakeScene({
               <p className="success-detail">
                 Raw words live only in Krava&apos;s encrypted memory. The journalist&apos;s desk now
                 holds only the safe summary.
+              </p>
+              <p className="tech-note">
+                Split-storage: ciphertext in Krava · sanitized_summary in Postgres — anon RLS blocks
+                browser reads of tip rows.
               </p>
             </div>
           </div>
