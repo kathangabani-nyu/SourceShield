@@ -10,8 +10,9 @@ export default function LimitsPage() {
         <h1 className="mt-6 text-2xl font-semibold">Limits &amp; honest scope</h1>
         <ul className="mt-8 list-inside list-disc space-y-4 text-slate-300">
           <li>
-            <strong className="text-white">Pseudonymous, not anonymous.</strong> Linq, Apple, and
-            carriers see phone metadata. Our webhook sees inbound payloads.
+            <strong className="text-white">Anonymous web intake still has edges.</strong>{" "}
+            SourceShield does not ask for a phone number or identity on the web path, but browser,
+            hosting, and network metadata can still exist outside the app.
           </li>
           <li>
             Journalists never see phone numbers, chat IDs, or raw transcripts on the dashboard.

@@ -1,0 +1,376 @@
+/* ============================================================
+   SourceShield Story — per-scene visuals & focal animations
+   simple shapes + light. depth and glow over density.
+   ============================================================ */
+
+/* shared scene helpers ------------------------------------- */
+.split {
+  display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 72px; align-items: center;
+  text-align: left;
+}
+.split .copy .display { margin: 0; }
+.split .copy .lede { margin: 26px 0 0; }
+@media (max-width: 900px) {
+  .split { grid-template-columns: 1fr; gap: 48px; text-align: center; }
+  .split .copy .lede { margin: 24px auto 0; }
+  .split .visual { order: -1; }
+}
+
+.guar-index {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 22px; display: inline-flex; gap: 10px; align-items: center;
+}
+.guar-index .of { color: var(--ink-faint); }
+
+.uses {
+  margin-top: 32px; display: inline-flex; align-items: center; gap: 14px;
+  padding: 13px 20px 13px 16px; border-radius: 14px;
+  border: 1px solid oklch(0.78 0.12 256 / 0.32); background: oklch(0.78 0.13 256 / 0.07);
+  backdrop-filter: blur(10px); max-width: 100%;
+}
+.uses .sg {
+  width: 15px; height: 19px; flex: none;
+  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  box-shadow: 0 0 12px oklch(0.78 0.13 256 / 0.6);
+  clip-path: polygon(50% 0, 100% 14%, 100% 58%, 50% 100%, 0 58%, 0 14%);
+}
+.uses .txt { text-align: left; }
+.uses .txt b { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin-bottom: 3px; }
+.uses .txt span { font-size: 0.95rem; color: var(--ink-soft); line-height: 1.45; }
+@media (max-width: 900px){ .uses { text-align: left; } .split .copy .uses { margin-left: auto; margin-right: auto; } }
+
+/* generic focal canvas */
+.viz {
+  position: relative; width: 100%; aspect-ratio: 1 / 0.92; max-width: 460px; margin: 0 auto;
+}
+
+/* ============================================================
+   OPENING
+   ============================================================ */
+#s-open .display { font-size: clamp(3rem, 9vw, 6.4rem); }
+#s-open .openmark {
+  margin: 0 auto 34px; width: 40px; height: 50px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  box-shadow: 0 0 40px oklch(0.78 0.13 256 / 0.6);
+  clip-path: polygon(50% 0, 100% 14%, 100% 58%, 50% 100%, 0 58%, 0 14%);
+  animation: breathe 5s ease-in-out infinite;
+}
+@keyframes breathe { 0%,100%{ transform: scale(1); opacity:0.92; } 50%{ transform: scale(1.06); opacity:1; } }
+
+/* ============================================================
+   PROBLEM — data leaking toward a watching eye
+   ============================================================ */
+#s-problem .display em {
+  background: linear-gradient(120deg, oklch(0.9 0.03 40), var(--warn) 60%, oklch(0.78 0.1 40));
+  -webkit-background-clip: text; background-clip: text;
+}
+.leak {
+  position: relative; width: 100%; max-width: 760px; height: 300px; margin: 56px auto 0;
+}
+.eye {
+  position: absolute; right: 4%; top: 50%; transform: translateY(-50%);
+  width: 150px; height: 92px;
+}
+.eye .lid {
+  position: absolute; inset: 0; border: 1.5px solid oklch(0.7 0.08 40 / 0.55);
+  border-radius: 50%; box-shadow: 0 0 60px oklch(0.66 0.13 38 / 0.28), inset 0 0 30px oklch(0.66 0.13 38 / 0.18);
+}
+.eye .iris {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 42px; height: 42px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, oklch(0.82 0.13 45) 0%, var(--warn) 38%, oklch(0.35 0.1 34) 75%);
+  box-shadow: 0 0 26px oklch(0.66 0.13 38 / 0.7);
+  animation: irisscan 6s ease-in-out infinite;
+}
+.eye .pupil { position:absolute; left:50%; top:50%; transform: translate(-50%,-50%); width:14px;height:14px;border-radius:50%; background: oklch(0.1 0.02 40); }
+@keyframes irisscan { 0%,100%{ transform: translate(-50%,-50%) translateX(-7px);} 50%{ transform: translate(-50%,-50%) translateX(7px);} }
+.leak .src {
+  position: absolute; left: 2%; top: 50%; transform: translateY(-50%);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-faint);
+  border: 1px solid var(--hair); border-radius: 12px; padding: 16px 18px; background: oklch(0.2 0.02 260 / 0.4);
+  text-align: left; line-height: 1.9;
+}
+.particle {
+  position: absolute; left: 18%; top: 50%; width: 7px; height: 7px; border-radius: 50%;
+  background: oklch(0.8 0.1 45); box-shadow: 0 0 10px oklch(0.7 0.12 42 / 0.8);
+  opacity: 0; animation: leakflow 4.2s linear infinite;
+}
+@keyframes leakflow {
+  0% { opacity: 0; transform: translate(0, var(--oy, 0)) scale(0.6); }
+  12% { opacity: 0.9; }
+  82% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(var(--dx, 480px), 0) scale(0.4); }
+}
+
+/* ============================================================
+   SHIFT — exhale into calm architecture
+   ============================================================ */
+.archi { position: relative; width: 100%; max-width: 620px; height: 300px; margin: 52px auto 0; }
+.archi .bloom {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 60px; height: 60px; border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+  filter: blur(8px); animation: bloom 7s ease-in-out infinite;
+}
+@keyframes bloom { 0%,100%{ transform: translate(-50%,-50%) scale(2); opacity:0.4;} 50%{ transform: translate(-50%,-50%) scale(7); opacity:0.85;} }
+.archi .grid-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.archi .grid-svg line { stroke: oklch(0.7 0.06 256 / 0.35); stroke-width: 1; stroke-dasharray: 6 6; }
+.archi .node {
+  position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow); transform: translate(-50%,-50%);
+  animation: nodepulse 4s ease-in-out infinite;
+}
+@keyframes nodepulse { 0%,100%{ opacity:0.5; transform: translate(-50%,-50%) scale(0.8);} 50%{opacity:1; transform: translate(-50%,-50%) scale(1.2);} }
+
+/* ============================================================
+   WHAT KRAVA IS — stacked floating planes
+   ============================================================ */
+.planes { position: relative; width: 100%; max-width: 420px; aspect-ratio: 1/1; margin: 0 auto; perspective: 1000px; }
+.plane {
+  position: absolute; left: 50%; width: 280px; height: 168px; margin-left: -140px;
+  border-radius: 16px; border: 1px solid var(--hair);
+  transform: translateY(var(--y)) rotateX(58deg) rotateZ(-42deg);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft);
+  background: linear-gradient(135deg, oklch(0.26 0.03 258 / 0.5), oklch(0.18 0.025 260 / 0.4));
+  box-shadow: 0 30px 70px oklch(0.05 0.02 260 / 0.4);
+  animation: planefloat 8s ease-in-out infinite;
+}
+.plane.p-top { --y: -64px; top: 42%; animation-delay: 0s; }
+.plane.p-krava {
+  --y: 6px; top: 42%; animation-delay: 0.5s; color: var(--accent);
+  border-color: oklch(0.78 0.12 256 / 0.55);
+  background: linear-gradient(135deg, oklch(0.4 0.09 256 / 0.42), oklch(0.3 0.07 256 / 0.32));
+  box-shadow: 0 30px 90px oklch(0.6 0.12 256 / 0.3), inset 0 0 30px oklch(0.78 0.13 256 / 0.15);
+}
+.plane.p-infra { --y: 76px; top: 42%; animation-delay: 1s; color: var(--ink-faint); }
+@keyframes planefloat {
+  0%,100%{ transform: translateY(var(--y)) rotateX(58deg) rotateZ(-42deg); }
+  50%{ transform: translateY(calc(var(--y) - 10px)) rotateX(58deg) rotateZ(-42deg); }
+}
+
+/* ============================================================
+   GUARANTEE 1 — PasskeyID
+   ============================================================ */
+.passkey { position: relative; }
+.passkey .ring {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 180px; height: 180px; border-radius: 50%;
+  background: radial-gradient(circle, oklch(0.78 0.13 256 / 0.16), transparent 68%);
+  animation: breathe 5.5s ease-in-out infinite;
+}
+.faceid {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 118px; height: 118px;
+}
+.faceid svg { width: 100%; height: 100%; }
+.faceid .stroke { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; filter: drop-shadow(0 0 8px oklch(0.78 0.13 256 / 0.7)); }
+.id-token {
+  position: absolute; left: 50%; top: 50%;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--ink);
+  border: 1px solid var(--hair); border-radius: 10px; padding: 8px 12px;
+  background: oklch(0.22 0.03 258 / 0.55); backdrop-filter: blur(6px); white-space: nowrap;
+  animation: idmask 7s ease-in-out infinite;
+}
+.id-token.t1 { --tx: -150px; --ty: -86px; animation-delay: 0s; }
+.id-token.t2 { --tx: 92px;  --ty: -64px; animation-delay: 0.6s; }
+.id-token.t3 { --tx: -134px; --ty: 70px;  animation-delay: 1.2s; }
+.id-token.t4 { --tx: 96px;   --ty: 78px;  animation-delay: 1.8s; }
+@keyframes idmask {
+  0%   { opacity: 0; transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1); filter: blur(0); }
+  18%  { opacity: 1; }
+  60%  { opacity: 1; transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1); filter: blur(0); }
+  88%  { opacity: 0; transform: translate(-50%, -50%) scale(0.5); filter: blur(8px); }
+  100% { opacity: 0; }
+}
+
+/* ============================================================
+   GUARANTEE 2 — Secure Memory
+   ============================================================ */
+.mem { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: nowrap; }
+.mem .col { display: flex; flex-direction: column; align-items: center; gap: 12px; flex: none; }
+.mem .label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+.keyicon { width: 40px; height: 40px; }
+.keyicon svg { width: 100%; height: 100%; }
+.keyicon .k { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 7px oklch(0.78 0.13 256 / 0.7)); }
+.seal {
+  position: relative; width: 168px; min-height: 92px; border-radius: 14px;
+  border: 1px solid oklch(0.78 0.12 256 / 0.4); background: oklch(0.4 0.07 256 / 0.16);
+  box-shadow: inset 0 0 26px oklch(0.78 0.13 256 / 0.14), 0 0 30px oklch(0.6 0.12 256 / 0.18);
+  padding: 14px; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+}
+.seal .cipher { font-family: var(--mono); font-size: 11px; line-height: 1.7; letter-spacing: 0.04em; color: var(--accent); word-break: break-all; text-align: center; }
+.seal .lockdot {
+  position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+  width: 18px; height: 18px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 14px var(--accent-glow); display: flex; align-items: center; justify-content: center;
+}
+.seal .lockdot::after { content: ""; width: 6px; height: 6px; border: 1.5px solid oklch(0.14 0.02 258); border-bottom: none; border-radius: 4px 4px 0 0; margin-top: -3px; }
+.db { width: 46px; height: 54px; position: relative; }
+.db .disc { position: absolute; left: 0; right: 0; height: 13px; border: 1.5px solid var(--ink-faint); border-radius: 50%; }
+.db .disc.d-a { top: 0; background: oklch(0.22 0.02 260); } .db .disc.d-b { top: 18px; } .db .disc.d-c { top: 36px; }
+.db .wall { position: absolute; left: 0; width: 1.5px; top: 6px; bottom: 6px; background: var(--ink-faint); } .db .wall.r { right: 0; left: auto; }
+.mem .flow { width: 38px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); position: relative; flex: none; }
+.mem .flow::after { content:""; position:absolute; top:-2px; left:0; width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent-glow); animation: flowdot 2.4s linear infinite; }
+@keyframes flowdot { 0%{ left:0; opacity:0;} 20%{opacity:1;} 80%{opacity:1;} 100%{ left:32px; opacity:0;} }
+@media (max-width: 520px){ .mem { transform: scale(0.82); } }
+
+/* ============================================================
+   GUARANTEE 3 — PrivateLLM (sealed enclave / TEE)
+   ============================================================ */
+.tee { position: relative; width: 100%; max-width: 440px; height: 260px; margin: 0 auto; }
+.tee .enclave {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 168px; height: 168px; border-radius: 26px;
+  border: 1px solid oklch(0.8 0.1 256 / 0.45);
+  background: linear-gradient(160deg, oklch(0.42 0.08 256 / 0.34), oklch(0.26 0.05 258 / 0.28));
+  backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: 0 0 60px oklch(0.6 0.12 256 / 0.3), inset 0 0 40px oklch(0.78 0.13 256 / 0.18);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.tee .enclave .core {
+  width: 54px; height: 54px; border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+  animation: breathe 3.6s ease-in-out infinite;
+}
+.tee .enclave .scan {
+  position: absolute; left: -40%; top: 0; width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, oklch(0.85 0.1 256 / 0.22), transparent);
+  animation: scan 4.5s linear infinite;
+}
+@keyframes scan { 0%{ left:-40%;} 100%{ left:120%;} }
+.tee .enclave .frost { position:absolute; inset:0; backdrop-filter: blur(2px); }
+.tee .tlabel { position:absolute; left:50%; bottom: 8px; transform: translateX(-50%); font-family: var(--mono); font-size: 9px; letter-spacing: 0.24em; color: var(--accent); }
+.tee .pkt {
+  position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; margin-top: -6px;
+  background: var(--accent); box-shadow: 0 0 14px var(--accent-glow);
+  animation: pktin 5s ease-in-out infinite;
+}
+@keyframes pktin {
+  0% { left: 2%; opacity: 0; transform: scale(0.6);} 14%{opacity:1;}
+  40% { left: 42%; opacity: 1; transform: scale(1);}
+  46% { left: 46%; opacity: 0; }
+  58% { left: 54%; opacity: 0; }
+  64% { left: 58%; opacity: 1; }
+  90% { left: 96%; opacity: 1; }
+  100%{ left: 98%; opacity: 0; transform: scale(0.6);}
+}
+.tee .watcher {
+  position: absolute; left: 50%; top: 2px; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.6;
+}
+.tee .watcher .e { width: 26px; height: 16px; border: 1.4px solid var(--ink-faint); border-radius: 50%; position: relative; }
+.tee .watcher .e::after { content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:6px;height:6px;border-radius:50%; background: var(--ink-faint); }
+.tee .watcher .blocked { font-family: var(--mono); font-size: 8px; letter-spacing: 0.16em; color: var(--ink-faint); text-transform: uppercase; }
+
+/* ============================================================
+   GUARANTEE 4 — Private Inference Router
+   ============================================================ */
+.router { position: relative; width: 100%; max-width: 460px; height: 280px; margin: 0 auto; }
+.router svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.router .path { fill: none; stroke: oklch(0.6 0.05 256 / 0.4); stroke-width: 1.5; stroke-dasharray: 5 6; }
+.router .live { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 10 200; filter: drop-shadow(0 0 6px var(--accent-glow)); animation: route 3.6s ease-in-out infinite; }
+@keyframes route { 0%{ stroke-dashoffset: 210; opacity: 0;} 20%{opacity:1;} 100%{ stroke-dashoffset: 0; opacity:1; } }
+.router .src-node, .router .enc {
+  position: absolute; transform: translate(-50%,-50%);
+  width: 46px; height: 46px; border-radius: 13px; border: 1px solid var(--hair);
+  background: oklch(0.24 0.03 258 / 0.5); display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em; color: var(--ink-faint); text-align: center;
+}
+.router .src-node { left: 12%; top: 50%; color: var(--ink-soft); }
+.router .enc.chosen {
+  border-color: oklch(0.78 0.12 256 / 0.6); color: var(--accent);
+  background: oklch(0.4 0.08 256 / 0.28); box-shadow: 0 0 28px oklch(0.6 0.12 256 / 0.4);
+  animation: chosenpulse 3.6s ease-in-out infinite;
+}
+@keyframes chosenpulse { 0%,60%{ box-shadow: 0 0 10px oklch(0.6 0.12 256 / 0.2);} 80%,100%{ box-shadow: 0 0 30px oklch(0.6 0.12 256 / 0.5);} }
+
+/* ============================================================
+   OUR APP — SourceShield flow
+   ============================================================ */
+.flow {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; align-items: stretch;
+  width: 100%; max-width: 980px; margin: 0 auto; position: relative;
+}
+.fstep {
+  position: relative; padding: 26px 20px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.fstep:not(:last-child)::after {
+  content: ""; position: absolute; right: -1px; top: 64px; width: 2px; height: 0;
+  background: linear-gradient(180deg, var(--accent), transparent);
+}
+.fstep .icon {
+  width: 58px; height: 58px; border-radius: 16px; border: 1px solid var(--hair);
+  background: oklch(0.22 0.03 258 / 0.5); display: flex; align-items: center; justify-content: center;
+  position: relative; transition: all 0.8s var(--ease);
+}
+.fstep.lit .icon { border-color: oklch(0.78 0.12 256 / 0.5); box-shadow: 0 0 26px oklch(0.6 0.12 256 / 0.32); background: oklch(0.4 0.08 256 / 0.2); }
+.fstep .icon .gl { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle, var(--accent-glow), transparent 72%); opacity: 0.5; transition: opacity 0.8s ease; }
+.fstep.lit .icon .gl { opacity: 1; }
+.fstep h4 { font-family: var(--serif); font-weight: 400; font-size: 1.12rem; margin: 0; color: var(--ink); }
+.fstep p { margin: 0; font-size: 0.86rem; line-height: 1.5; color: var(--ink-soft); max-width: 20ch; }
+.fstep .gtag {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-faint); padding: 5px 9px; border-radius: 999px; border: 1px solid var(--hair);
+  transition: all 0.8s var(--ease);
+}
+.fstep.lit .gtag { color: var(--accent); border-color: oklch(0.78 0.12 256 / 0.4); background: oklch(0.78 0.13 256 / 0.08); }
+.flow .rail-line { position: absolute; left: 8%; right: 8%; top: 53px; height: 1px; background: var(--hair); z-index: -1; }
+.flow .rail-line .pulse-dot {
+  position: absolute; top: -3px; left: 0; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 12px var(--accent-glow);
+  animation: flowtravel 7s ease-in-out infinite;
+}
+@keyframes flowtravel { 0%{ left: 0; opacity: 0;} 8%{opacity:1;} 92%{opacity:1;} 100%{ left: 100%; opacity: 0;} }
+@media (max-width: 760px) {
+  .flow { grid-template-columns: 1fr 1fr; gap: 18px; }
+  .flow .rail-line { display: none; }
+}
+
+/* ============================================================
+   LINQ — iMessage two-way pseudonymous
+   ============================================================ */
+.thread {
+  width: 100%; max-width: 420px; margin: 0 auto; padding: 22px 20px 26px; border-radius: 26px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.thread .thead {
+  display: flex; align-items: center; gap: 10px; justify-content: center;
+  padding-bottom: 16px; margin-bottom: 6px; border-bottom: 1px solid var(--line);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft);
+}
+.thread .thead .lk { width: 6px; height: 8px; border: 1.4px solid var(--accent); border-top-width: 3px; border-radius: 2px; box-shadow: 0 0 8px oklch(0.78 0.13 256 / 0.5); }
+.bub { max-width: 78%; padding: 12px 16px; font-size: 0.98rem; line-height: 1.45; border-radius: 20px; position: relative; }
+.bub.in { align-self: flex-start; background: oklch(0.28 0.02 258 / 0.6); color: var(--ink); border-bottom-left-radius: 6px; border: 1px solid var(--hair); }
+.bub.out { align-self: flex-end; color: oklch(0.16 0.02 258); border-bottom-right-radius: 6px;
+  background: linear-gradient(180deg, oklch(0.86 0.10 254), var(--accent)); box-shadow: 0 8px 26px oklch(0.6 0.12 256 / 0.3); }
+.bub .who { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.6; display: block; margin-bottom: 4px; }
+
+/* ============================================================
+   WHY IT WINS — constellation
+   ============================================================ */
+.constel { position: relative; width: 100%; max-width: 720px; height: 380px; margin: 40px auto 0; }
+.constel svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.constel svg line { stroke: oklch(0.7 0.06 256 / 0.22); stroke-width: 1; }
+.constel .core {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 70px; height: 70px; border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+  display: flex; align-items: center; justify-content: center; animation: breathe 5s ease-in-out infinite;
+}
+.constel .core .sg {
+  width: 22px; height: 28px; background: linear-gradient(180deg, oklch(0.95 0.02 256), var(--accent));
+  clip-path: polygon(50% 0, 100% 14%, 100% 58%, 50% 100%, 0 58%, 0 14%);
+}
+.star {
+  position: absolute; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-align: center; width: 130px;
+}
+.star .pt { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 14px var(--accent-glow); animation: starpulse 4s ease-in-out infinite; }
+.star .nm { font-family: var(--serif); font-style: italic; font-size: 1.02rem; color: var(--ink); }
+.star .sub { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
+@keyframes starpulse { 0%,100%{ transform: scale(0.85); opacity: 0.7;} 50%{ transform: scale(1.15); opacity: 1;} }
+@media (max-width: 720px) { .constel { height: 460px; } .star { width: 104px; } .star .nm { font-size: 0.9rem; } }

@@ -1,36 +1,22 @@
-import { createKravaUserClient } from "./client";
-import { parseAgentChatStream } from "@kravalabs/api-client";
+import { platformChat } from "./client";
 
-/** Stream text from Krava agent chat (TEE-routed when model is kimi-k2-5). */
+/**
+ * Stream text from Krava for a platform-provisioned user.
+ *
+ * Uses the documented BYO-Agent path (`/api/platform/chat`, `Authorization:
+ * Bearer <userToken>`) — NOT the OpenClaw agent path (`getGatewayCredentials`
+ * + `v1.agentChat`), which requires a Telegram-paired pod and 404s with
+ * `not_found:agent` for platform users.
+ *
+ * `temperature` is accepted for call-site compatibility but ignored: the
+ * platform chat endpoint does not expose it.
+ */
 export async function streamKravaText(
   userToken: string,
   system: string,
   userContent: string,
-  temperature = 0.2
+  _temperature = 0.2
 ): Promise<string> {
-  const client = createKravaUserClient(userToken);
-  const { gatewayToken } = await client.agent.getGatewayCredentials();
-
-  const response = await client.v1.agentChat(
-    {
-      model: "kimi-k2-5",
-      stream: true,
-      system,
-      messages: [{ role: "user", content: userContent }],
-      temperature,
-    },
-    { gatewayToken }
-  );
-
-  let text = "";
-  for await (const event of parseAgentChatStream(response)) {
-    if (
-      event.type === "content_block_delta" &&
-      event.delta.type === "text_delta"
-    ) {
-      text += String((event.delta as { text?: string }).text ?? "");
-    }
-  }
-
-  return text;
+  void _temperature;
+  return platformChat(userToken, system, userContent);
 }

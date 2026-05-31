@@ -1,0 +1,271 @@
+/* SourceShield Story — scene framework & presentation chrome */
+
+.source-shield-story .deck {
+  position: relative;
+  z-index: 3;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.source-shield-story .deck::-webkit-scrollbar {
+  display: none;
+}
+
+.source-shield-story .scene {
+  position: relative;
+  min-height: 100vh;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 86px 40px;
+  text-align: center;
+}
+
+.source-shield-story .scene-inner {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.source-shield-story .rail {
+  position: fixed;
+  right: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
+.source-shield-story .rail button {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  background: oklch(0.5 0.03 256 / 0.35);
+  border: 1px solid oklch(0.6 0.04 256 / 0.3);
+  transition: all 0.6s var(--ease);
+  position: relative;
+}
+
+.source-shield-story .rail button:hover {
+  background: oklch(0.7 0.06 256 / 0.6);
+}
+
+.source-shield-story .rail button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+  height: 22px;
+  border-radius: 6px;
+}
+
+.source-shield-story .rail .tip {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+  background: oklch(0.14 0.02 260 / 0.8);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--hair);
+  backdrop-filter: blur(8px);
+}
+
+.source-shield-story .rail button:hover .tip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.source-shield-story .deck-mark {
+  position: fixed;
+  left: 30px;
+  top: 26px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.source-shield-story .deck-mark .glyph {
+  width: 13px;
+  height: 17px;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%);
+  box-shadow: 0 0 14px oklch(0.78 0.13 256 / 0.5);
+  clip-path: polygon(50% 0, 100% 14%, 100% 58%, 50% 100%, 0 58%, 0 14%);
+}
+
+.source-shield-story .counter {
+  position: fixed;
+  right: 30px;
+  bottom: 26px;
+  z-index: 40;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--ink-faint);
+}
+
+.source-shield-story .counter b {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.source-shield-story .scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 38px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: opacity 0.8s ease;
+}
+
+.source-shield-story .scroll-hint .dash {
+  width: 1px;
+  height: 38px;
+  background: linear-gradient(180deg, var(--accent), transparent);
+  animation: ss-story-hintpulse 2.6s ease-in-out infinite;
+}
+
+@keyframes ss-story-hintpulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scaleY(0.7);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scaleY(1);
+  }
+}
+
+.source-shield-story.phase-tense .ambient {
+  background:
+    radial-gradient(120% 80% at 50% -10%, oklch(0.17 0.02 30) 0%, transparent 55%),
+    radial-gradient(100% 60% at 50% 115%, oklch(0.13 0.02 280) 0%, transparent 60%),
+    oklch(0.1 0.014 268);
+}
+
+.source-shield-story.phase-tense .aurora.a1 {
+  opacity: 0.12;
+}
+
+.source-shield-story.phase-tense .aurora.a2,
+.source-shield-story.phase-tense .aurora.a3 {
+  opacity: 0.08;
+}
+
+.source-shield-story .anim {
+  opacity: 0;
+  transform: translateY(42px);
+  transition:
+    opacity 1.4s var(--ease),
+    transform 1.4s var(--ease);
+}
+
+.source-shield-story .scene.active .anim {
+  opacity: 1;
+  transform: none;
+}
+
+.source-shield-story .d1 {
+  transition-delay: 0.12s;
+}
+.source-shield-story .d2 {
+  transition-delay: 0.26s;
+}
+.source-shield-story .d3 {
+  transition-delay: 0.4s;
+}
+.source-shield-story .d4 {
+  transition-delay: 0.54s;
+}
+.source-shield-story .d5 {
+  transition-delay: 0.68s;
+}
+.source-shield-story .d6 {
+  transition-delay: 0.82s;
+}
+
+.source-shield-story .scene .lede {
+  margin: 28px auto 0;
+}
+
+.source-shield-story .focal {
+  animation-play-state: paused !important;
+}
+
+.source-shield-story .scene.active .focal {
+  animation-play-state: running !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .source-shield-story .aurora,
+  .source-shield-story .grain,
+  .source-shield-story .scroll-hint .dash {
+    animation: none !important;
+  }
+
+  .source-shield-story .anim {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .source-shield-story .deck {
+    scroll-snap-type: none;
+  }
+
+  .source-shield-story .focal {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .source-shield-story .scene {
+    padding: 92px 24px;
+  }
+
+  .source-shield-story .rail {
+    right: 12px;
+    gap: 11px;
+  }
+
+  .source-shield-story .deck-mark span:last-child {
+    display: none;
+  }
+}
