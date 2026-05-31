@@ -17,14 +17,12 @@ const PROC_STEPS = [
 type CardPhase = "idle" | "processing" | "success";
 
 type StoryIntakeSceneProps = {
-  sceneRef: (el: HTMLElement | null) => void;
   tipCount: number;
   onSubmit: (tip: DemoTip) => void;
   onScrollToDashboard: () => void;
 };
 
 export function StoryIntakeScene({
-  sceneRef,
   tipCount,
   onSubmit,
   onScrollToDashboard,
@@ -58,7 +56,7 @@ export function StoryIntakeScene({
   }
 
   return (
-    <section className="scene" id="s-intake" ref={sceneRef} aria-label="Live · Intake">
+    <section className="scene" id="s-intake" aria-label="Live · Intake">
       <div className="scene-inner" style={{ maxWidth: 700 }}>
         <div className="kicker lines anim">Try it — live</div>
         <h2 className="display anim d1" style={{ marginTop: 20 }}>
@@ -75,7 +73,7 @@ export function StoryIntakeScene({
             <div className="intake-head">
               <span className="source-id">
                 <span className="dot" aria-hidden="true" />
-                Pseudonymous session · web
+                Anonymous web session
               </span>
               <span className="mono-label">Encrypted in transit</span>
             </div>

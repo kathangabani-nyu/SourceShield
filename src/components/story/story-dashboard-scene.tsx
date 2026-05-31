@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { rewriteQuestion, type DemoTip } from "@/lib/story-demo";
 
 type StoryDashboardSceneProps = {
-  sceneRef: (el: HTMLElement | null) => void;
   tips: DemoTip[];
   active: boolean;
 };
@@ -96,16 +95,11 @@ function TipCard({
   );
 }
 
-export function StoryDashboardScene({ sceneRef, tips, active }: StoryDashboardSceneProps) {
+export function StoryDashboardScene({ tips, active }: StoryDashboardSceneProps) {
   const [openId, setOpenId] = useState<string | null>(null);
-  const [renderKey, setRenderKey] = useState(0);
-
-  useEffect(() => {
-    if (active) setRenderKey((key) => key + 1);
-  }, [active, tips.length]);
 
   return (
-    <section className="scene" id="s-dash" ref={sceneRef} aria-label="Live · Dashboard">
+    <section className="scene" id="s-dash" aria-label="Live · Dashboard">
       <div className="dash-wrap">
         <div className="dash-header anim">
           <div>
@@ -122,7 +116,7 @@ export function StoryDashboardScene({ sceneRef, tips, active }: StoryDashboardSc
           Click any card to expand it. See the raw tip alongside the sanitized version — then draft
           a safe follow-up question.
         </p>
-        <div className="tip-grid" key={renderKey}>
+        <div className="tip-grid" key={`${active ? "active" : "idle"}-${tips.length}`}>
           {tips.map((tip, index) => (
             <TipCard
               key={tip.id}

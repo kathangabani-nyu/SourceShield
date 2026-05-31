@@ -111,6 +111,7 @@ export default function HomePage() {
           <div className="ss-navlinks">
             <a href="#how">How it works</a>
             <a href="#limits">Honest limits</a>
+            <Link href="/story">Demo story</Link>
             <Link href="/intake">Submit a tip</Link>
           </div>
         </nav>
@@ -132,6 +133,9 @@ export default function HomePage() {
             <a href="#how" className="ss-btn ss-btn-ghost">
               See how it works
             </a>
+            <Link href="/story" className="ss-btn ss-btn-ghost">
+              Demo story
+            </Link>
           </div>
           <div className="ss-hero-status ss-reveal ss-in ss-d4">
             <span className="ss-pulse" aria-hidden="true" />
@@ -262,6 +266,9 @@ export default function HomePage() {
               <Link href="/dashboard" className="ss-btn ss-btn-ghost">
                 Journalist dashboard
               </Link>
+              <Link href="/story" className="ss-btn ss-btn-ghost">
+                Presentation mode
+              </Link>
             </div>
           </div>
         </section>
@@ -272,6 +279,7 @@ export default function HomePage() {
             <div className="ss-foot-links">
               <a href="#how">How it works</a>
               <a href="#limits">Honest limits</a>
+              <Link href="/story">Demo story</Link>
               <Link href="/intake">Submit a tip</Link>
             </div>
             <span>Krava x Linq</span>

@@ -26,7 +26,7 @@ const DASHBOARD_SCENE_INDEX = SCENES.findIndex((scene) => scene.id === "s-dash")
 
 const CONSTELLATION_STARS = [
   { name: "Krava depth", sub: "four primitives, used" },
-  { name: "Privacy-first", sub: "exposure by design: none" },
+  { name: "Privacy-first", sub: "exposure minimized by design" },
   { name: "Experience", sub: "calm, legible, alive" },
   { name: "Creativity", sub: "redaction as light" },
   { name: "Execution", sub: "shipped & live" },
@@ -43,16 +43,18 @@ type Particle = {
 
 function buildParticles(): Particle[] {
   return Array.from({ length: 22 }, (_, id) => {
-    const oy = Math.random() * 120 - 60;
+    const oy = ((id * 37) % 120) - 60;
     return {
       id,
       oy,
-      dx: 520 + Math.random() * 60,
-      delay: (Math.random() * 4.2).toFixed(2),
-      duration: (3.6 + Math.random() * 1.6).toFixed(2),
+      dx: 520 + ((id * 17) % 60),
+      delay: (((id * 29) % 42) / 10).toFixed(2),
+      duration: (3.6 + ((id * 13) % 16) / 10).toFixed(2),
     };
   });
 }
+
+const PARTICLES = buildParticles();
 
 function GuaranteeUse({ children }: { children: React.ReactNode }) {
   return (
@@ -69,20 +71,18 @@ function GuaranteeUse({ children }: { children: React.ReactNode }) {
 export function SourceShieldStory() {
   const rootRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<HTMLElement>(null);
-  const sceneRefs = useRef<(HTMLElement | null)[]>([]);
   const constelRef = useRef<HTMLDivElement>(null);
   const cipherRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
 
   const [current, setCurrent] = useState(0);
   const [phaseTense, setPhaseTense] = useState(false);
-  const [particles, setParticles] = useState<Particle[]>([]);
   const [hintHidden, setHintHidden] = useState(false);
   const [demoTips, setDemoTips] = useState<DemoTip[]>(SEED_DEMO_TIPS);
 
   const scrollToScene = useCallback((index: number) => {
     const deck = deckRef.current;
-    const scene = sceneRefs.current[index];
+    const scene = deck?.querySelectorAll<HTMLElement>(".scene")[index];
     if (!deck || !scene) return;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -94,12 +94,8 @@ export function SourceShieldStory() {
   }, []);
 
   useEffect(() => {
-    setParticles(buildParticles());
-  }, []);
-
-  useEffect(() => {
     const deck = deckRef.current;
-    const scenes = sceneRefs.current.filter(Boolean) as HTMLElement[];
+    const scenes = [...(deck?.querySelectorAll<HTMLElement>(".scene") ?? [])];
     if (!deck || scenes.length === 0) return;
 
     scenes[0]?.classList.add("active");
@@ -285,10 +281,6 @@ export function SourceShieldStory() {
     return () => window.removeEventListener("resize", layout);
   }, []);
 
-  const setSceneRef = (index: number) => (el: HTMLElement | null) => {
-    sceneRefs.current[index] = el;
-  };
-
   return (
     <div
       ref={rootRef}
@@ -326,12 +318,7 @@ export function SourceShieldStory() {
       </div>
 
       <main className="deck" ref={deckRef}>
-        <section
-          className="scene"
-          id="s-open"
-          ref={setSceneRef(0)}
-          aria-label="Opening"
-        >
+        <section className="scene" id="s-open" aria-label="Opening">
           <div className="scene-inner">
             <div className="openmark anim" aria-hidden="true" />
             <div className="kicker lines anim d1">Krava × Linq · Privacy-First AI</div>
@@ -351,12 +338,7 @@ export function SourceShieldStory() {
           </div>
         </section>
 
-        <section
-          className="scene"
-          id="s-problem"
-          ref={setSceneRef(1)}
-          aria-label="The problem"
-        >
+        <section className="scene" id="s-problem" aria-label="The problem">
           <div className="scene-inner">
             <div className="kicker lines anim">The cost of convenience</div>
             <h2 className="display anim d1" style={{ marginTop: 22 }}>
@@ -381,7 +363,7 @@ export function SourceShieldStory() {
                 <div className="iris" />
                 <div className="pupil" />
               </div>
-              {particles.map((p) => (
+              {PARTICLES.map((p) => (
                 <span
                   key={p.id}
                   className="particle focal"
@@ -400,7 +382,7 @@ export function SourceShieldStory() {
           </div>
         </section>
 
-        <section className="scene" id="s-shift" ref={setSceneRef(2)} aria-label="The shift">
+        <section className="scene" id="s-shift" aria-label="The shift">
           <div className="scene-inner">
             <div className="kicker lines anim">A different foundation</div>
             <h2 className="display anim d1" style={{ marginTop: 22 }}>
@@ -443,7 +425,7 @@ export function SourceShieldStory() {
           </div>
         </section>
 
-        <section className="scene" id="s-krava" ref={setSceneRef(3)} aria-label="What Krava is">
+        <section className="scene" id="s-krava" aria-label="What Krava is">
           <div className="scene-inner split">
             <div className="copy">
               <div className="kicker anim">The privacy layer</div>
@@ -468,7 +450,6 @@ export function SourceShieldStory() {
         <section
           className="scene"
           id="s-passkey"
-          ref={setSceneRef(4)}
           aria-label="Guarantee · PasskeyID"
         >
           <div className="scene-inner split">
@@ -513,7 +494,6 @@ export function SourceShieldStory() {
         <section
           className="scene"
           id="s-memory"
-          ref={setSceneRef(5)}
           aria-label="Guarantee · Secure Memory"
         >
           <div className="scene-inner split">
@@ -580,7 +560,7 @@ export function SourceShieldStory() {
           </div>
         </section>
 
-        <section className="scene" id="s-llm" ref={setSceneRef(6)} aria-label="Guarantee · PrivateLLM">
+        <section className="scene" id="s-llm" aria-label="Guarantee · PrivateLLM">
           <div className="scene-inner split">
             <div className="visual anim d2">
               <div className="tee" aria-hidden="true">
@@ -618,7 +598,6 @@ export function SourceShieldStory() {
         <section
           className="scene"
           id="s-router"
-          ref={setSceneRef(7)}
           aria-label="Guarantee · Inference Router"
         >
           <div className="scene-inner split">
@@ -655,21 +634,21 @@ export function SourceShieldStory() {
               </p>
               <GuaranteeUse>
                 Sanitization and follow-up inference are routed through Krava&apos;s private enclave
-                path — no plaintext ever leaves it.
+                path so sensitive text is handled inside the private inference boundary.
               </GuaranteeUse>
             </div>
           </div>
         </section>
 
-        <section className="scene" id="s-app" ref={setSceneRef(8)} aria-label="Our app · SourceShield">
+        <section className="scene" id="s-app" aria-label="Our app · SourceShield">
           <div className="scene-inner">
             <div className="kicker lines anim">Our app, end to end</div>
             <h2 className="display anim d1" style={{ marginTop: 20 }}>
               SourceShield, in <em>one calm flow.</em>
             </h2>
             <p className="lede anim d2" style={{ maxWidth: "52ch" }}>
-              A pseudonymous tip travels from a frightened source to a journalist&apos;s desk — and
-              every step rests on a Krava guarantee.
+              A tip travels from a protected source to a journalist&apos;s desk — and every step rests
+              on a Krava guarantee.
             </p>
             <div className="flow anim d3" style={{ marginTop: 60 }}>
               <div className="rail-line">
@@ -712,19 +691,17 @@ export function SourceShieldStory() {
         </section>
 
         <StoryIntakeScene
-          sceneRef={setSceneRef(9)}
           tipCount={demoTips.length}
           onSubmit={(tip) => setDemoTips((tips) => [tip, ...tips])}
           onScrollToDashboard={() => scrollToScene(DASHBOARD_SCENE_INDEX)}
         />
 
         <StoryDashboardScene
-          sceneRef={setSceneRef(10)}
           tips={demoTips}
           active={current === DASHBOARD_SCENE_INDEX}
         />
 
-        <section className="scene" id="s-linq" ref={setSceneRef(11)} aria-label="Linq integration">
+        <section className="scene" id="s-linq" aria-label="Linq integration">
           <div className="scene-inner split">
             <div className="visual anim d2">
               <div className="thread glass">
@@ -760,7 +737,7 @@ export function SourceShieldStory() {
           </div>
         </section>
 
-        <section className="scene" id="s-why" ref={setSceneRef(12)} aria-label="Why it wins">
+        <section className="scene" id="s-why" aria-label="Why it wins">
           <div className="scene-inner">
             <div className="kicker lines anim">Why this wins</div>
             <h2 className="display anim d1" style={{ marginTop: 20 }}>

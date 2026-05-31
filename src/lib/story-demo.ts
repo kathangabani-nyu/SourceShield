@@ -124,7 +124,7 @@ export function rewriteQuestion(question: string): string {
     if (pattern.test(question)) return rewrite;
   }
 
-  let r = question
+  const r = question
     .replace(/\b(name|names)\b/gi, "identifier")
     .replace(/\b(contact|reach|call|email)\b/gi, "communicate through secure channel with")
     .replace(/\b(where|location|address)\b/gi, "general area")
