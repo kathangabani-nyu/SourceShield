@@ -8,7 +8,7 @@ import "./demo.css";
 export const metadata: Metadata = {
   title: "SourceShield — A Privacy Story",
   description:
-    "A scroll-through privacy story for the Krava × Linq hackathon — thirteen cinematic scenes with live intake and dashboard demos.",
+    "A scroll-through privacy story — cinematic scenes with live intake and dashboard walkthroughs.",
 };
 
 export default function StoryPage() {

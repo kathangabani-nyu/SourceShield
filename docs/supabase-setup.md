@@ -1,6 +1,6 @@
 # SourceShield — Supabase project
 
-Created via the **Supabase Cursor plugin** (separate from PriorityTrac).
+Created via the **Supabase Cursor plugin**.
 
 | Field | Value |
 |-------|-------|
@@ -32,11 +32,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key from dashboard>
 SUPABASE_SERVICE_ROLE_KEY=<service_role secret from dashboard>
 ```
 
-Also set on **Vercel** (same three vars) before demo deploy.
-
-## Free tier
-
-This project is on Supabase **Free** ($0/mo at creation). Keep **PriorityTrac paused** and use only this project for the hackathon. See [`docs/free-tier.md`](free-tier.md).
+Also set on **Vercel** (same three vars) before production deploy.
 
 ## Verify
 
@@ -50,6 +46,6 @@ curl -X POST http://localhost:3000/api/seed \
 # → seeded corroboration tips
 ```
 
-## Security note (hackathon scope)
+## Security note
 
 Migration **003** drops `anon_read_tips` so the browser anon key cannot read `linq_chat_id` or other tip columns. The dashboard loads tips via **`GET /api/tips`** (service role server-side), optionally gated by **`DASHBOARD_SECRET`** on production. Sensitive tables (`linq_events`, `source_channels`, `outbound_messages`) deny anon access.

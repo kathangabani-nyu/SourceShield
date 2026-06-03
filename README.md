@@ -2,7 +2,7 @@
 
 **Pseudonymous two-way newsroom tips** — sources reach out over iMessage (Linq) or anonymous web intake; journalists see **sanitized case cards** and send **safe follow-ups**. Raw text never lands in your database.
 
-Built for the **Krava × Linq** hackathon. Live demo: [source-shield.vercel.app](https://source-shield.vercel.app)
+Live: [source-shield.vercel.app](https://source-shield.vercel.app)
 
 ---
 
@@ -44,12 +44,12 @@ Phone handles are **SHA-256 hashed** before storage; `linq_chat_id` stays server
 
 ---
 
-## What judges should see in 60 seconds
+## Quick tour
 
 1. **[Web intake](https://source-shield.vercel.app/intake)** — Submit a tip with a name, date, and dollar amount. The UI shows **raw (Krava-only)** vs **sanitized (dashboard/Postgres)** side by side.
 2. **[Dashboard](https://source-shield.vercel.app/dashboard)** — Select a card. Type an unsafe follow-up. Watch it **rewrite** before send (dry-run without Linq; live send with Linq).
 3. **Resume with your case code** — Submit again using the case code from step 1; Krava memory can **recall prior context** (when the Krava key is live).
-4. **[Story](https://source-shield.vercel.app/story)** (optional) — Scroll-through narrative mapping Krava’s four guarantees to SourceShield, with live intake/dashboard demos.
+4. **[Story](https://source-shield.vercel.app/story)** (optional) — Scroll-through narrative mapping Krava’s four guarantees to SourceShield, with live intake and dashboard scenes.
 
 The landing page **system status chips** probe Krava and Supabase in real time — degraded mode is visible, not hidden behind “No tips yet.”
 
@@ -64,7 +64,7 @@ The landing page **system status chips** probe Krava and Supabase in real time �
 | Phone / chat identifiers | Server + Linq only | **Not** exposed on dashboard API |
 | Journalist follow-up drafts | Rewritten in-app | Source sees safe version on iMessage |
 
-We say **pseudonymous** on the iMessage path, not anonymous — Linq, Apple, and carriers still see phone metadata. Web intake is **anonymous at the app layer** on the hosted demo; strongest path is Tor + self-hosted onion. See [Limits & scope](https://source-shield.vercel.app/limits) and [docs/anonymity.md](docs/anonymity.md).
+iMessage is **pseudonymous** at the app layer (Linq, Apple, and carriers still see phone metadata). Web intake is **anonymous at the app layer** on the hosted site; Tor + self-hosted onion is the strongest network path. Details: [docs/anonymity.md](docs/anonymity.md).
 
 ---
 
@@ -114,7 +114,7 @@ SourceShield uses four Krava primitives end-to-end:
 | Duress handling | High signal → fixed neutral pause reply; never asks “Are you being forced?” |
 | Safe follow-ups | Regex strip → optional Krava rewrite (`via: regex \| regex+krava`) |
 | Corroboration | Fingerprint match, then second LLM pass on **sanitized** summaries only |
-| Degradation | Missing/401 key → **mock intake** with heuristic sanitization (demo still runs) |
+| Degradation | Missing/401 key → **mock intake** with heuristic sanitization |
 
 ```bash
 npm run krava:doctor   # checks KRAVA_APP_KEY + provisioning
@@ -134,7 +134,7 @@ Memory save failures are **non-blocking** — the source still gets a reply and 
 | Register | `npm run register-webhook` after deploy |
 | Media | Text-only policy — media-only inbound gets a safety reply, no blob storage in DB |
 
-Without Linq keys, follow-ups run in **preview (dry-run)** mode — intentional for conference demos.
+Without Linq keys, follow-ups run in **preview (dry-run)** mode.
 
 ---
 
@@ -174,8 +174,7 @@ npm run dev
 | `/` | Overview + live integration status |
 | `/intake` | Anonymous web tips + case-code continuity |
 | `/dashboard` | Journalist case cards + safe follow-up |
-| `/story` | Scroll-through Krava × SourceShield demo narrative |
-| `/limits` | Full “what we do not claim” |
+| `/story` | Scroll-through Krava × SourceShield narrative |
 | `/api/health` | Probes Krava + Supabase (JSON) |
 
 ---
@@ -189,7 +188,7 @@ Server-only secrets must **never** use the `NEXT_PUBLIC_` prefix.
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Anon key (client; dashboard polls via API) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Server writes + `/api/tips` — **must be set on Vercel Production** |
-| `KRAVA_APP_KEY` | For live AI | Hackathon app key from Krava; mock fallback if missing/401 |
+| `KRAVA_APP_KEY` | For live AI | Krava app key; mock fallback if missing/401 |
 | `KRAVA_BASE_URL` | Optional | Default `https://krava.io` |
 | `LINQ_API_KEY` | For iMessage | Linq API key |
 | `LINQ_WEBHOOK_SECRET` | For iMessage | Webhook HMAC secret |
@@ -212,7 +211,7 @@ Generate secrets (PowerShell):
 The repo is wired for **auto-deploy from `main`**.
 
 1. Import the GitHub repo in [Vercel](https://vercel.com).
-2. Set all variables above for **Production** (and **Preview** if you demo on preview URLs).
+2. Set all variables above for **Production** (and **Preview** if you use preview URLs).
 3. Redeploy after changing env vars.
 4. Open `/dashboard` → enter `DASHBOARD_SECRET` once to unlock.
 
@@ -222,15 +221,15 @@ The repo is wired for **auto-deploy from `main`**.
 - [ ] Valid `KRAVA_APP_KEY` → **Krava private inference — live**
 - [ ] `DASHBOARD_SECRET` + `INTERNAL_WORKER_SECRET` set
 - [ ] `NEXT_PUBLIC_APP_URL` matches the Vercel hostname
-- [ ] Optional: `npm run register-webhook` when Linq keys arrive
+- [ ] Optional: `npm run register-webhook` when Linq keys are configured
 
 ---
 
-## Demo without Linq (conference fallback)
+## Running without Linq
 
 1. Submit a tip at `/intake` — confirm raw vs sanitized panels.
 2. Unlock `/dashboard` with `DASHBOARD_SECRET`.
-3. Click **Load demo case cards** (or `POST /api/demo/seed` with dashboard auth) for corroboration examples.
+3. Click **Load sample cases** (or `POST /api/demo/seed` with dashboard auth) for corroboration examples.
 4. Select a card → **Preview rewrite (dry-run)** with an identifying question.
 
 ```bash
@@ -243,8 +242,6 @@ curl -X POST https://source-shield.vercel.app/api/demo/seed \
   -H "Authorization: Bearer $DASHBOARD_SECRET"
 ```
 
-Full talk track: [`docs/demo-rehearsal.md`](docs/demo-rehearsal.md)
-
 ---
 
 ## API routes
@@ -255,7 +252,7 @@ Full talk track: [`docs/demo-rehearsal.md`](docs/demo-rehearsal.md)
 | `POST` | `/api/intake/web` | Public | Web tip intake (`Cache-Control: no-store`) |
 | `GET` | `/api/tips` | `DASHBOARD_SECRET` (prod) | List sanitized cards |
 | `POST` | `/api/tips/[id]/follow-up` | `DASHBOARD_SECRET` (prod) | Rewrite (+ Linq send if configured) |
-| `POST` | `/api/demo/seed` | `DASHBOARD_SECRET` (prod) | Demo case cards |
+| `POST` | `/api/demo/seed` | `DASHBOARD_SECRET` (prod) | Sample case cards |
 | `POST` | `/api/seed` | `INTERNAL_WORKER_SECRET` (prod) | Same seed via worker secret |
 | `POST` | `/api/linq/webhook` | HMAC | Linq ingress (ACK-first) |
 | `POST` | `/api/linq/process` | `INTERNAL_WORKER_SECRET` (prod) | Background worker |
@@ -283,14 +280,13 @@ src/
     dashboard/    # Journalist UI
     intake/       # Anonymous web intake
     story/        # Krava × SourceShield scroll narrative
-    limits/       # Honest scope page
   lib/
     krava/        # Platform chat, memory, intake LLM, safe rewrite
     linq/         # Client, webhook verify, extract text
     supabase/     # Admin + browser clients
   components/     # Integration status chips, story scenes
 supabase/migrations/
-docs/             # Setup, API verification, rehearsal, anonymity, free tier
+docs/             # Setup, API verification, anonymity
 ```
 
 ---
@@ -299,29 +295,8 @@ docs/             # Setup, API verification, rehearsal, anonymity, free tier
 
 - [Supabase setup](docs/supabase-setup.md) — project `bsarszpxxsntohgazmsy`
 - [API verification (Task Zero)](docs/api-verification.md) — Linq + Krava shapes
-- [Demo rehearsal](docs/demo-rehearsal.md) — 2‑minute talk track
 - [Web intake anonymity](docs/anonymity.md) — threat model, Tor, case codes, CSP
-- [Free tier / $0 runbook](docs/free-tier.md)
 - [Design decisions](DECISIONS.md)
-
----
-
-## Honest limits (short)
-
-- **Pseudonymous ≠ anonymous** on iMessage — metadata exists outside our DB.
-- **Web intake** — anonymous at the app layer; Vercel platform logs may still exist.
-- **Similar claim ≠ independent corroboration** — channel count is a signal, not proof.
-- **Coercion flag** — model signal; bot pauses neutrally, never asks “Are you being forced?”
-- **Attachments** — text-only; media declined to avoid metadata leaks.
-- **Case code** — user-held resume secret; we cannot recover a lost code.
-
-[Full limits →](https://source-shield.vercel.app/limits)
-
----
-
-## License
-
-Hackathon project — see repository for terms.
 
 ---
 

@@ -55,7 +55,7 @@ export function IntegrationStatusChips({ showBanner = true }: { showBanner?: boo
     <div className="ss-integration-status">
       {showBanner && !integrations.demo_ready && (
         <p className="ss-integration-banner ss-integration-banner-warn">
-          Demo degraded. Fix red/amber chips before judging. Mock sanitization may still run on
+          Degraded mode. Fix red/amber chips before going live. Mock sanitization may still run on
           intake, but cards need a live database.
         </p>
       )}

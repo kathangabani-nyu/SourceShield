@@ -5,7 +5,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-/** Dashboard-accessible demo seed (same data as /api/seed). */
+/** Dashboard-accessible sample seed (same data as /api/seed). */
 export async function POST(request: NextRequest) {
   const authError = requireDashboardAuth(request);
   if (authError) return authError;
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       ok: true,
       claim_group_id,
       tip_ids,
-      message: "Demo case cards loaded.",
+      message: "Sample case cards loaded.",
     });
   } catch (err) {
     return NextResponse.json(

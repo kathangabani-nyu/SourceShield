@@ -129,8 +129,7 @@ export function IntakeClient({
           </Link>
           <div className="ss-navlinks">
             <Link href="/dashboard">Dashboard</Link>
-            <Link href="/story">Demo story</Link>
-            <Link href="/limits">Honest limits</Link>
+            <Link href="/story">Story</Link>
           </div>
         </nav>
 

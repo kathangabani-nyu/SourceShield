@@ -1,7 +1,7 @@
 # API Verification (Task Zero)
 
 Verified against public Linq docs + `@linqapp/sdk@0.25.0` + `@kravalabs/api-client@0.2.0` type definitions.
-Re-confirm with sponsor reps at the hackathon before demo.
+Re-confirm with Linq/Krava support when wiring production keys.
 
 ## Linq v3 — confirmed
 
@@ -100,7 +100,7 @@ await userClient.memory.save(rawTranscript, "transcript");
 
 ### Open items for sponsor reps
 
-- [ ] Confirm hackathon `KRAVA_APP_KEY` quota and TEE model availability (`kimi-k2-5` latency)
+- [ ] Confirm `KRAVA_APP_KEY` quota and TEE model availability (`kimi-k2-5` latency)
 - [ ] Confirm `agent.getGatewayCredentials()` works for platform-provisioned users without agent pod
 - [ ] Paste one real inbound webhook from staging after first test text
 

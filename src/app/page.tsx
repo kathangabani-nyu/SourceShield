@@ -24,27 +24,6 @@ const beats = [
   },
 ];
 
-const limits = [
-  {
-    tag: "Web intake",
-    title: "Anonymous at the application layer.",
-    body: "No login, no phone, no browser-stored session, no analytics, no third-party requests — and no raw text in the newsroom database. Raw transcripts may live in Krava encrypted memory; network anonymity is Tor's job.",
-    tech: "TLS 1.3 in transit · case code UUIDv4 (user-held) · channel keyed SHA-256(web:uuid).",
-  },
-  {
-    tag: "iMessage path",
-    title: "Pseudonymous, not invisible.",
-    body: "Two-way follow-up over Linq keeps the thread alive without exposing identity in the newsroom — but carriers and Apple still see phone metadata.",
-    tech: "Webhook verified HMAC-SHA256 · chat_id server-only · dashboard API strips phone fields.",
-  },
-  {
-    tag: "The signal",
-    title: "A similar claim is a lead, not proof.",
-    body: "When separate channels echo the same story, SourceShield surfaces it as a signal worth chasing, never as independent corroboration.",
-    tech: "claim_fingerprint slug from LLM · grouped in Postgres — no raw text compared.",
-  },
-];
-
 export default function HomePage() {
   const [safeView, setSafeView] = useState(false);
   const [userTouchedToggle, setUserTouchedToggle] = useState(false);
@@ -116,8 +95,7 @@ export default function HomePage() {
           </Link>
           <div className="ss-navlinks">
             <a href="#how">How it works</a>
-            <a href="#limits">Honest limits</a>
-            <Link href="/story">Demo story</Link>
+            <Link href="/story">Story</Link>
             <Link href="/intake">Submit a tip</Link>
           </div>
         </nav>
@@ -140,7 +118,7 @@ export default function HomePage() {
               See how it works
             </a>
             <Link href="/story" className="ss-btn ss-btn-ghost">
-              Demo story
+              Story
             </Link>
           </div>
           <div className="ss-hero-status ss-reveal ss-in ss-d4">
@@ -243,30 +221,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="ss-block" id="limits" aria-labelledby="limits-title">
-          <div className="ss-wrap">
-            <div className="ss-eyebrow ss-reveal">What we will not pretend</div>
-            <h2 id="limits-title" className="ss-section-title ss-reveal ss-d1">
-              Honesty is part of the protection.
-            </h2>
-            <p className="ss-section-lede ss-reveal ss-d2">
-              The shield is real, and so are its edges. We tell sources exactly where it ends.
-            </p>
-            <div className="ss-limits-grid">
-              {limits.map((limit, index) => (
-                <article key={limit.tag} className={`ss-limit ss-reveal ss-d${index + 1}`}>
-                  <span>{limit.tag}</span>
-                  <h3>{limit.title}</h3>
-                  <p>{limit.body}</p>
-                  {"tech" in limit && limit.tech ? (
-                    <p className="ss-tech-note">{limit.tech}</p>
-                  ) : null}
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section className="ss-block ss-closing" id="submit" aria-labelledby="closing-title">
           <div className="ss-wrap">
             <h2 id="closing-title" className="ss-section-title ss-reveal">
@@ -297,8 +251,7 @@ export default function HomePage() {
             <span>SourceShield - pseudonymous newsroom intake</span>
             <div className="ss-foot-links">
               <a href="#how">How it works</a>
-              <a href="#limits">Honest limits</a>
-              <Link href="/story">Demo story</Link>
+              <Link href="/story">Story</Link>
               <Link href="/intake">Submit a tip</Link>
             </div>
             <span>Krava x Linq</span>

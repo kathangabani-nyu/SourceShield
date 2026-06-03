@@ -20,6 +20,10 @@
 # production
 /build
 
+# design exports (local only)
+.design-extract/
+.design-extract-new/
+
 # misc
 .DS_Store
 *.pem

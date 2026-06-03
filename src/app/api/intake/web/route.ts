@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     warnings: [
       ...(result.engine === "mock"
         ? [
-            "Krava inference unavailable — showing regex mock sanitization. Fix KRAVA_APP_KEY for live demo.",
+            "Krava inference unavailable — showing regex mock sanitization. Set KRAVA_APP_KEY for live intake.",
           ]
         : []),
       ...(result.db_error ? [`Dashboard card not saved: ${result.db_error}`] : []),

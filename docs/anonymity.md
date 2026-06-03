@@ -2,7 +2,7 @@
 
 SourceShield separates **anonymous web intake** (application-layer minimization + Tor guidance)
 from **pseudonymous iMessage follow-up** (Linq thread continuity). This document is the precise
-claim judges and sources should rely on.
+claim operators and sources should rely on.
 
 ## The claim we ship (application layer)
 
@@ -17,7 +17,7 @@ claim judges and sources should rely on.
 | "We store nothing" | The newsroom database stores **only sanitized summaries**; raw text is processed and may be held in **Krava encrypted memory**. |
 | "We never see your IP" | The **app route does not intentionally read or persist** network metadata; **Vercel infrastructure** still receives `x-vercel-ip-*` and may keep platform logs. Network anonymity requires **Tor / onion hosting**. |
 | "The case code lives only with you" | The case code is the **only resume secret** you hold; the server stores a **one-way channel hash** (`web:<sessionId>` → `hashHandle`). |
-| "Totally anonymous" (hosted demo) | **Anonymous at the app layer** on the public site; **strongest** path is Tor + self-hosted onion with logs disabled. |
+| "Totally anonymous" (hosted site) | **Anonymous at the app layer** on the public site; **strongest** path is Tor + self-hosted onion with logs disabled. |
 
 ## What the web path collects (intentionally)
 
@@ -62,7 +62,7 @@ claim client-side-only processing. Client-side PII stripping before upload is **
 
 ## Tor & onion mirror (optional real deployment)
 
-The hosted **Vercel demo cannot disable platform request logs**. For judges who pull on network
+The hosted **Vercel deployment cannot disable platform request logs**. For sources who need network
 anonymity, document:
 
 1. Run the app bound to **localhost** behind `tor` HiddenService.
@@ -70,7 +70,7 @@ anonymity, document:
 3. Disable reverse-proxy access logs (e.g. Nginx `access_log off`) on self-hosted mirrors.
 4. Prefer Tor Browser for sources; onion is strongest when app + network layer align.
 
-We do **not** stand up a production onion service in the hackathon repo — deploy notes only.
+Production onion hosting is a separate deploy — configuration notes only in this repo.
 
 ## Environment
 

@@ -117,7 +117,7 @@ export function StoryDashboardScene({ tips, active }: StoryDashboardSceneProps) 
           a safe follow-up question.
         </p>
         <p className="tech-note anim d1" style={{ marginBottom: 32, maxWidth: "52ch" }}>
-          Demo mirrors production: dashboard shows Postgres summaries only · raw panel illustrative ·
+          Story mode mirrors production: dashboard shows Postgres summaries only · raw panel illustrative ·
           real deploy strips phone/chat fields.
         </p>
         <div className="tip-grid" key={`${active ? "active" : "idle"}-${tips.length}`}>

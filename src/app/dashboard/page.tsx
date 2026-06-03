@@ -57,8 +57,7 @@ function AppChrome({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="ss-navlinks">
             <Link href="/intake">Source intake</Link>
-            <Link href="/story">Demo story</Link>
-            <Link href="/limits">Honest limits</Link>
+            <Link href="/story">Story</Link>
           </div>
         </nav>
         {children}
@@ -302,7 +301,7 @@ export default function DashboardPage() {
                 disabled={seeding}
                 className="ss-btn ss-btn-ghost ss-small-btn"
               >
-                {seeding ? "Loading..." : "Load demo"}
+                {seeding ? "Loading..." : "Load samples"}
               </button>
             </div>
 
@@ -328,7 +327,7 @@ export default function DashboardPage() {
                     disabled={seeding}
                     className="ss-btn ss-btn-ghost ss-small-btn"
                   >
-                    {seeding ? "Loading..." : "Load demo cards"}
+                    {seeding ? "Loading..." : "Load sample cases"}
                   </button>
                 </div>
               </div>
@@ -446,25 +445,6 @@ export default function DashboardPage() {
           </aside>
         </section>
 
-        <section className="ss-wrap ss-dashboard-limits">
-          <div className="ss-limit">
-            <span>01</span>
-            <h3>Raw words stay sealed</h3>
-            <p>No phone numbers, chat IDs, or raw transcripts are shown on the journalist desk.</p>
-            <p className="ss-tech-note">
-              Raw text in Krava AES-256-GCM memory · dashboard reads sanitized rows via service role
-              only.
-            </p>
-          </div>
-          <div className="ss-limit">
-            <span>02</span>
-            <h3>Signals are not proof</h3>
-            <p>Similar-claim counts and coercion-risk flags guide review; they do not verify facts.</p>
-            <p className="ss-tech-note">
-              claim_fingerprint grouping · LLM duress_signal enum — not forensic evidence.
-            </p>
-          </div>
-        </section>
       </main>
     </AppChrome>
   );
